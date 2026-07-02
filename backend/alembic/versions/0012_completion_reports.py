@@ -18,8 +18,23 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    lifecycle_status = postgresql.ENUM("ACTIVE", "GOAL_REACHED", "AWAITING_REPORT", "COMPLETED", name="campaign_lifecycle_status")
-    lifecycle_status.create(op.get_bind(), checkfirst=True)
+    lifecycle_status = postgresql.ENUM(
+        "ACTIVE",
+        "GOAL_REACHED",
+        "AWAITING_REPORT",
+        "COMPLETED",
+        name="campaign_lifecycle_status",
+        create_type=False,
+    )
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            CREATE TYPE campaign_lifecycle_status AS ENUM ('ACTIVE', 'GOAL_REACHED', 'AWAITING_REPORT', 'COMPLETED');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+        """
+    )
 
     op.add_column("campaigns", sa.Column("status", lifecycle_status, nullable=False, server_default="ACTIVE"))
     op.add_column("campaigns", sa.Column("report_requested_at", sa.DateTime(timezone=True), nullable=True))

@@ -4,7 +4,6 @@ Revision ID: 0018_user_profile_fields
 Revises: 0017_subscription_notification
 """
 
-import sqlalchemy as sa
 from alembic import op
 
 
@@ -15,14 +14,14 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("first_name", sa.String(length=80), nullable=True))
-    op.add_column("users", sa.Column("last_name", sa.String(length=80), nullable=True))
-    op.add_column("users", sa.Column("bio", sa.String(length=250), nullable=True))
-    op.add_column("users", sa.Column("city", sa.String(length=80), nullable=True))
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(80)")
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name VARCHAR(80)")
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS bio VARCHAR(250)")
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(80)")
 
 
 def downgrade() -> None:
-    op.drop_column("users", "city")
-    op.drop_column("users", "bio")
-    op.drop_column("users", "last_name")
-    op.drop_column("users", "first_name")
+    op.execute("ALTER TABLE users DROP COLUMN IF EXISTS city")
+    op.execute("ALTER TABLE users DROP COLUMN IF EXISTS bio")
+    op.execute("ALTER TABLE users DROP COLUMN IF EXISTS last_name")
+    op.execute("ALTER TABLE users DROP COLUMN IF EXISTS first_name")

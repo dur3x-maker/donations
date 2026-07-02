@@ -4,7 +4,6 @@ Revision ID: 0021_email_verification
 Revises: 0020_bank_account_apps
 """
 
-import sqlalchemy as sa
 from alembic import op
 
 
@@ -15,10 +14,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("verification_token", sa.String(length=128), nullable=True))
-    op.create_index(op.f("ix_users_verification_token"), "users", ["verification_token"], unique=True)
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(128)")
+    op.execute("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_verification_token ON users (verification_token)")
 
 
 def downgrade() -> None:
-    op.drop_index(op.f("ix_users_verification_token"), table_name="users")
-    op.drop_column("users", "verification_token")
+    op.execute("DROP INDEX IF EXISTS ix_users_verification_token")
+    op.execute("ALTER TABLE users DROP COLUMN IF EXISTS verification_token")

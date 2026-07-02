@@ -6,7 +6,6 @@ Revises: 0021_email_verification
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 
 revision = "0022_telegram_moderation"
@@ -21,45 +20,47 @@ def upgrade() -> None:
         op.execute("ALTER TYPE campaign_lifecycle_status ADD VALUE IF NOT EXISTS 'REJECTED'")
         op.execute("ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'campaign_moderation'")
 
-    op.drop_index("uq_campaigns_owner_unfinished", table_name="campaigns")
-    op.create_index(
-        "uq_campaigns_owner_unfinished",
-        "campaigns",
-        ["owner_id"],
-        unique=True,
-        postgresql_where=sa.text(
-            "is_active IS TRUE AND status IN "
+    op.execute("DROP INDEX IF EXISTS uq_campaigns_owner_unfinished")
+    op.execute(
+        sa.text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_campaigns_owner_unfinished "
+            "ON campaigns (owner_id) "
+            "WHERE is_active IS TRUE AND status IN "
             "('ACTIVE', 'PENDING_REVIEW', 'REVISION_REQUIRED', 'GOAL_REACHED', 'AWAITING_REPORT')"
-        ),
+        )
     )
 
-    op.create_table(
-        "telegram_moderation_sessions",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("campaign_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("chat_id", sa.String(length=64), nullable=False),
-        sa.Column("message_id", sa.Integer(), nullable=False),
-        sa.Column("admin_telegram_id", sa.String(length=64), nullable=False),
-        sa.Column("admin_name", sa.String(length=160), nullable=False),
-        sa.ForeignKeyConstraint(["campaign_id"], ["campaigns.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
+    op.execute(
+        """
+        CREATE TABLE IF NOT EXISTS telegram_moderation_sessions (
+            id UUID NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+            campaign_id UUID NOT NULL,
+            chat_id VARCHAR(64) NOT NULL,
+            message_id INTEGER NOT NULL,
+            admin_telegram_id VARCHAR(64) NOT NULL,
+            admin_name VARCHAR(160) NOT NULL,
+            PRIMARY KEY (id),
+            FOREIGN KEY(campaign_id) REFERENCES campaigns (id) ON DELETE CASCADE
+        )
+        """
     )
-    op.create_index(op.f("ix_telegram_moderation_sessions_campaign_id"), "telegram_moderation_sessions", ["campaign_id"], unique=False)
-    op.create_index(op.f("ix_telegram_moderation_sessions_admin_telegram_id"), "telegram_moderation_sessions", ["admin_telegram_id"], unique=True)
+    op.execute("CREATE INDEX IF NOT EXISTS ix_telegram_moderation_sessions_campaign_id ON telegram_moderation_sessions (campaign_id)")
+    op.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_telegram_moderation_sessions_admin_telegram_id "
+        "ON telegram_moderation_sessions (admin_telegram_id)"
+    )
 
 
 def downgrade() -> None:
-    op.drop_index(op.f("ix_telegram_moderation_sessions_admin_telegram_id"), table_name="telegram_moderation_sessions")
-    op.drop_index(op.f("ix_telegram_moderation_sessions_campaign_id"), table_name="telegram_moderation_sessions")
-    op.drop_table("telegram_moderation_sessions")
-    op.drop_index("uq_campaigns_owner_unfinished", table_name="campaigns")
-    op.create_index(
-        "uq_campaigns_owner_unfinished",
-        "campaigns",
-        ["owner_id"],
-        unique=True,
-        postgresql_where=sa.text(
-            "is_active IS TRUE AND status IN ('ACTIVE', 'PENDING_REVIEW', 'GOAL_REACHED', 'AWAITING_REPORT')"
-        ),
+    op.execute("DROP INDEX IF EXISTS ix_telegram_moderation_sessions_admin_telegram_id")
+    op.execute("DROP INDEX IF EXISTS ix_telegram_moderation_sessions_campaign_id")
+    op.execute("DROP TABLE IF EXISTS telegram_moderation_sessions")
+    op.execute("DROP INDEX IF EXISTS uq_campaigns_owner_unfinished")
+    op.execute(
+        sa.text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_campaigns_owner_unfinished "
+            "ON campaigns (owner_id) "
+            "WHERE is_active IS TRUE AND status IN ('ACTIVE', 'PENDING_REVIEW', 'GOAL_REACHED', 'AWAITING_REPORT')"
+        )
     )

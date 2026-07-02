@@ -17,25 +17,23 @@ depends_on = None
 def upgrade() -> None:
     with op.get_context().autocommit_block():
         op.execute("ALTER TYPE campaign_lifecycle_status ADD VALUE IF NOT EXISTS 'PENDING_REVIEW'")
-    op.drop_index("uq_campaigns_owner_unfinished", table_name="campaigns")
-    op.create_index(
-        "uq_campaigns_owner_unfinished",
-        "campaigns",
-        ["owner_id"],
-        unique=True,
-        postgresql_where=sa.text(
-            "is_active IS TRUE AND status IN "
+    op.execute("DROP INDEX IF EXISTS uq_campaigns_owner_unfinished")
+    op.execute(
+        sa.text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_campaigns_owner_unfinished "
+            "ON campaigns (owner_id) "
+            "WHERE is_active IS TRUE AND status IN "
             "('ACTIVE', 'PENDING_REVIEW', 'GOAL_REACHED', 'AWAITING_REPORT')"
-        ),
+        )
     )
 
 
 def downgrade() -> None:
-    op.drop_index("uq_campaigns_owner_unfinished", table_name="campaigns")
-    op.create_index(
-        "uq_campaigns_owner_unfinished",
-        "campaigns",
-        ["owner_id"],
-        unique=True,
-        postgresql_where=sa.text("is_active IS TRUE AND status IN ('ACTIVE', 'GOAL_REACHED', 'AWAITING_REPORT')"),
+    op.execute("DROP INDEX IF EXISTS uq_campaigns_owner_unfinished")
+    op.execute(
+        sa.text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_campaigns_owner_unfinished "
+            "ON campaigns (owner_id) "
+            "WHERE is_active IS TRUE AND status IN ('ACTIVE', 'GOAL_REACHED', 'AWAITING_REPORT')"
+        )
     )
