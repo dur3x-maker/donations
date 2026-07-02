@@ -1,7 +1,7 @@
 """add bank account applications
 
-Revision ID: 0020_bank_account_applications
-Revises: 0019_pending_review_campaign_status
+Revision ID: 0020_bank_account_apps
+Revises: 0019_pending_review
 """
 
 import sqlalchemy as sa
@@ -9,8 +9,8 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 
-revision = "0020_bank_account_applications"
-down_revision = "0019_pending_review_campaign_status"
+revision = "0020_bank_account_apps"
+down_revision = "0019_pending_review"
 branch_labels = None
 depends_on = None
 

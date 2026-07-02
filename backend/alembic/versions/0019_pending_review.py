@@ -1,6 +1,6 @@
 """add pending review campaign status
 
-Revision ID: 0019_pending_review_campaign_status
+Revision ID: 0019_pending_review
 Revises: 0018_user_profile_fields
 """
 
@@ -8,7 +8,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "0019_pending_review_campaign_status"
+revision = "0019_pending_review"
 down_revision = "0018_user_profile_fields"
 branch_labels = None
 depends_on = None

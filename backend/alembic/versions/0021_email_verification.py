@@ -1,15 +1,15 @@
 """add email verification token
 
-Revision ID: 0021_email_verification_token
-Revises: 0020_bank_account_applications
+Revision ID: 0021_email_verification
+Revises: 0020_bank_account_apps
 """
 
 import sqlalchemy as sa
 from alembic import op
 
 
-revision = "0021_email_verification_token"
-down_revision = "0020_bank_account_applications"
+revision = "0021_email_verification"
+down_revision = "0020_bank_account_apps"
 branch_labels = None
 depends_on = None
 

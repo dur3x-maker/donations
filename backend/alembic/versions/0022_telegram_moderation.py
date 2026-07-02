@@ -1,7 +1,7 @@
 """add telegram high value moderation
 
-Revision ID: 0022_telegram_high_value_moderation
-Revises: 0021_email_verification_token
+Revision ID: 0022_telegram_moderation
+Revises: 0021_email_verification
 """
 
 import sqlalchemy as sa
@@ -9,8 +9,8 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 
-revision = "0022_telegram_high_value_moderation"
-down_revision = "0021_email_verification_token"
+revision = "0022_telegram_moderation"
+down_revision = "0021_email_verification"
 branch_labels = None
 depends_on = None
 
