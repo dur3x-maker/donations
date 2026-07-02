@@ -5,6 +5,8 @@ from app.models.campaign import Campaign, CampaignStatus
 MIN_DONATION_AMOUNT = Decimal("100")
 UNFINISHED_CAMPAIGN_STATUSES = (
     CampaignStatus.active,
+    CampaignStatus.pending_review,
+    CampaignStatus.revision_required,
     CampaignStatus.goal_reached,
     CampaignStatus.awaiting_report,
 )

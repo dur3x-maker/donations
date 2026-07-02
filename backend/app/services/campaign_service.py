@@ -17,9 +17,12 @@ from app.models.user import User
 from app.schemas.campaign import CampaignCreate, CampaignDetail, CampaignListItem, CampaignUpdate, CompletedCampaignListItem
 from app.schemas.common import OwnerOut
 from app.services.activity_service import create_activity
-from app.services.moderation_alert_service import send_moderation_alert
+from app.services.admin_event_service import AdminEventService, build_high_value_campaign_event
 from app.services.suspicious_flag_service import maybe_flag_many_campaigns
 from app.services.user_service import can_create_campaign, has_unfinished_campaign
+
+
+HIGH_VALUE_CAMPAIGN_THRESHOLD = Decimal("1000000")
 
 
 def _preview(text: str, limit: int = 180) -> str:
@@ -253,7 +256,12 @@ async def get_contributors_count(session: AsyncSession, campaign_id: UUID) -> in
     return int(count or 0)
 
 
-async def create_campaign(session: AsyncSession, owner: User, payload: CampaignCreate) -> Campaign:
+async def create_campaign(
+    session: AsyncSession,
+    owner: User,
+    payload: CampaignCreate,
+    admin_events: AdminEventService | None = None,
+) -> Campaign:
     await session.scalar(select(User.id).where(User.id == owner.id).with_for_update())
     if not await can_create_campaign(session, owner.id):
         if await has_unfinished_campaign(session, owner.id):
@@ -266,6 +274,7 @@ async def create_campaign(session: AsyncSession, owner: User, payload: CampaignC
             detail="Нужно минимум 5 подтвержденных вкладов в чужие сборы.",
         )
 
+    is_high_value = payload.target_amount >= HIGH_VALUE_CAMPAIGN_THRESHOLD
     campaign = Campaign(
         owner_id=owner.id,
         title=payload.title,
@@ -276,15 +285,14 @@ async def create_campaign(session: AsyncSession, owner: User, payload: CampaignC
         cover_image_url=payload.cover_image_url,
         is_verified=False,
         is_active=True,
-        status=CampaignStatus.active,
+        status=CampaignStatus.pending_review if is_high_value else CampaignStatus.active,
     )
     try:
         session.add(campaign)
         await session.flush()
-        await create_activity(session, ActivityType.campaign_created, actor_user_id=owner.id, campaign_id=campaign.id)
+        if campaign.status == CampaignStatus.active:
+            await create_activity(session, ActivityType.campaign_created, actor_user_id=owner.id, campaign_id=campaign.id)
         await maybe_flag_many_campaigns(session, owner.id)
-        if campaign.target_amount >= 1000000:
-            await send_moderation_alert("high_value_campaign_created", {"campaign_id": str(campaign.id), "target_amount": str(campaign.target_amount)})
         await session.commit()
     except IntegrityError:
         await session.rollback()
@@ -293,6 +301,8 @@ async def create_campaign(session: AsyncSession, owner: User, payload: CampaignC
             detail=UNFINISHED_CAMPAIGN_MESSAGE,
         )
     await session.refresh(campaign)
+    if is_high_value and admin_events is not None:
+        await admin_events.publish(build_high_value_campaign_event(campaign, owner))
     return campaign
 
 
@@ -300,6 +310,11 @@ async def update_campaign(session: AsyncSession, campaign_id: UUID, owner: User,
     campaign = await get_campaign_or_404(session, campaign_id)
     if campaign.owner_id != owner.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Только автор может изменить сбор")
+    if campaign.status != CampaignStatus.active:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Редактировать можно только активные сборы.",
+        )
     if payload.target_amount is not None and payload.target_amount <= campaign.current_amount:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

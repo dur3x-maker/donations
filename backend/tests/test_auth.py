@@ -1,4 +1,20 @@
 import pytest
+from sqlalchemy import select
+
+from app.main import app
+from app.models.user import User
+from app.services.email_verification_service import get_email_verification_service
+
+
+class FakeEmailVerificationService:
+    def __init__(self) -> None:
+        self.sent_to = []
+
+    async def create_and_send_token(self, session, user) -> None:
+        user.verification_token = "test-verification-token"
+        await session.commit()
+        await session.refresh(user)
+        self.sent_to.append(user.email)
 
 
 @pytest.mark.parametrize(
@@ -17,11 +33,15 @@ async def test_registration_validation(client, payload, status_code):
 
 
 async def test_register_and_login(client):
+    fake_email = FakeEmailVerificationService()
+    app.dependency_overrides[get_email_verification_service] = lambda: fake_email
     payload = {"email": "Donor@Example.com", "username": "Donor-One", "password": "password123"}
     registered = await client.post("/api/v1/auth/register", json=payload)
     assert registered.status_code == 200
     assert registered.json()["user"]["email"] == "donor@example.com"
     assert registered.json()["user"]["username"] == "donor-one"
+    assert registered.json()["user"]["is_verified"] is False
+    assert fake_email.sent_to == ["donor@example.com"]
 
     logged_in = await client.post(
         "/api/v1/auth/login",
@@ -30,6 +50,20 @@ async def test_register_and_login(client):
     assert logged_in.status_code == 200
     assert logged_in.json()["access_token"]
     assert logged_in.json()["refresh_token"]
+
+
+async def test_verify_email_marks_user_verified(client, db_session, user_factory):
+    user = await user_factory(email="verify@example.com")
+    user.verification_token = "valid-verification-token"
+    await db_session.commit()
+
+    response = await client.post("/api/v1/auth/verify-email", json={"token": "valid-verification-token"})
+
+    assert response.status_code == 200
+    assert response.json()["is_verified"] is True
+    refreshed = await db_session.scalar(select(User).where(User.id == user.id))
+    assert refreshed.is_verified is True
+    assert refreshed.verification_token is None
 
 
 @pytest.mark.parametrize(

@@ -1,4 +1,4 @@
-import type { ActivityItem, AuthResponse, AuthUser, AuthorReputation, CampaignCompletionReport, CampaignCompletionReportCreateInput, CampaignCreateInput, CampaignDetail, CampaignListItem, CampaignSubscription, CampaignUpdateCreateInput, CampaignUpdateInput, CampaignUpdateItem, CommunityPatron, CompletedCampaignListItem, ContributionProgress, DonateResponse, NotificationItem, OwnerDashboard, ProfileImpact, ProfileSummary, PublicUserProfile, RecentDonationsPage, ReportResponse, UserAchievement, WithdrawalInfo } from "./types";
+import type { ActivityItem, AuthResponse, AuthUser, AuthorReputation, BankAccountApplication, BankAccountApplicationState, CampaignCompletionReport, CampaignCompletionReportCreateInput, CampaignCreateInput, CampaignDetail, CampaignListItem, CampaignSubscription, CampaignUpdateCreateInput, CampaignUpdateInput, CampaignUpdateItem, CommunityPatron, CompletedCampaignListItem, ContactRequestInput, ContributionProgress, DonateResponse, NotificationItem, OwnerDashboard, PlatformStats, ProfileImpact, ProfileSummary, ProfileUpdateInput, PublicUserProfile, RecentDonationsPage, ReportResponse, UserAchievement, WithdrawalInfo } from "./types";
 
 const browserApiUrl = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL, "NEXT_PUBLIC_API_URL");
 const serverApiUrl = normalizeApiUrl(process.env.INTERNAL_API_URL ?? browserApiUrl, "INTERNAL_API_URL");
@@ -180,6 +180,17 @@ export function fetchCompletedCampaigns(params?: { page?: number; page_size?: nu
   return request<CompletedCampaignListItem[]>(`/api/v1/campaigns/completed${query ? `?${query}` : ""}`);
 }
 
+export function fetchPlatformStats() {
+  return request<PlatformStats>("/api/v1/platform/stats");
+}
+
+export function sendContactRequest(body: ContactRequestInput) {
+  return request<{ ok: boolean; message: string }>("/api/v1/contact", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 export function fetchCampaign(id: string) {
   return request<CampaignDetail>(`/api/v1/campaigns/${id}`);
 }
@@ -309,6 +320,30 @@ export async function uploadStoryPhoto(file: File) {
   return response.json() as Promise<{ url: string }>;
 }
 
+export async function uploadAvatar(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const headers = new Headers();
+  const accessToken = getStoredAccessToken();
+  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+
+  const response = await fetch(`${getApiUrl()}/api/v1/uploads/avatar`, {
+    method: "POST",
+    headers,
+    body: formData,
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(await readErrorMessage(response));
+  return response.json() as Promise<{ url: string }>;
+}
+
+export function updateProfile(body: ProfileUpdateInput) {
+  return request<AuthUser>("/api/v1/me", {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
 export function updateCampaign(campaignId: string, body: CampaignUpdateInput) {
   return request<CampaignDetail>(`/api/v1/campaigns/${campaignId}`, {
     method: "PATCH",
@@ -338,6 +373,14 @@ export function fetchOwnerDashboard() {
   return request<OwnerDashboard>("/api/v1/me/dashboard");
 }
 
+export function fetchBankAccountApplicationState() {
+  return request<BankAccountApplicationState>("/api/v1/bank-account/application");
+}
+
+export function createBankAccountApplication() {
+  return request<BankAccountApplication>("/api/v1/bank-account/applications", { method: "POST" });
+}
+
 export function fetchProfileSummary() {
   return request<ProfileSummary>("/api/v1/me/profile-summary");
 }
@@ -356,6 +399,17 @@ export function fetchCommunityPatrons() {
 
 export function fetchCurrentUser() {
   return request<AuthUser>("/api/v1/auth/me", { method: "POST" });
+}
+
+export function verifyEmail(token: string) {
+  return request<AuthUser>("/api/v1/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  }, false);
+}
+
+export function resendEmailVerification() {
+  return request<AuthUser>("/api/v1/auth/email-verification", { method: "POST" });
 }
 
 export function loginRequest(body: { email: string; password: string }) {

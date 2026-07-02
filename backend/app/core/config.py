@@ -18,6 +18,16 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     rate_limit_enabled: bool = True
     ws_max_connections_per_ip: int = 20
+    telegram_bot_token: str | None = None
+    telegram_chat_id: str | None = None
+    telegram_webhook_secret: str | None = None
+    frontend_public_url: str = "http://localhost:3000"
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str | None = None
+    smtp_use_tls: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

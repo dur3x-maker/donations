@@ -101,8 +101,8 @@ function OwnerView({ dashboard, campaign, progress }: { dashboard: OwnerDashboar
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
-        <CampaignCard campaign={campaign} canCreateAnotherCampaign={Boolean(canCreateAnotherCampaign)} />
-        <ManagementCard campaignId={campaign.id} />
+        <CampaignCard campaign={campaign} canCreateAnotherCampaign={Boolean(canCreateAnotherCampaign)} canOpenBankAccount={Boolean(progress?.can_open_bank_account)} />
+        <ManagementCard campaign={campaign} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
@@ -150,6 +150,7 @@ function MemberView({ progress }: { progress: ContributionProgress | null }) {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/campaigns" className="inline-flex rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">Найти сбор для поддержки</Link>
           {unlocked ? <Link href="/campaigns/new" className="inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200 transition hover:bg-emerald-50">Создать сбор</Link> : null}
+          {progress.can_open_bank_account ? <Link href="/bank-account/open" className="inline-flex rounded-full bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800">Открыть счёт</Link> : null}
         </div>
       </section>
     </div>
@@ -165,7 +166,8 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: "
   );
 }
 
-function CampaignCard({ campaign, canCreateAnotherCampaign }: { campaign: CampaignListItem; canCreateAnotherCampaign: boolean }) {
+function CampaignCard({ campaign, canCreateAnotherCampaign, canOpenBankAccount }: { campaign: CampaignListItem; canCreateAnotherCampaign: boolean; canOpenBankAccount: boolean }) {
+  const canEdit = campaign.status === "ACTIVE";
   return (
     <section className="rounded-[28px] border border-stone-200 bg-white p-6 shadow-[0_18px_55px_rgba(28,25,23,0.07)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -185,14 +187,17 @@ function CampaignCard({ campaign, canCreateAnotherCampaign }: { campaign: Campai
       <div className="mt-5"><ProgressBar value={campaign.progress_percentage} /></div>
       <div className="mt-6 flex flex-wrap gap-3">
         <Link href={`/campaigns/${campaign.id}`} className="inline-flex rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">Открыть страницу сбора</Link>
-        <Link href={`/campaigns/${campaign.id}/edit`} className="inline-flex rounded-full bg-stone-100 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:bg-stone-200">Редактировать</Link>
+        {canEdit ? <Link href={`/campaigns/${campaign.id}/edit`} className="inline-flex rounded-full bg-stone-100 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:bg-stone-200">Редактировать</Link> : null}
         {canCreateAnotherCampaign ? <Link href="/campaigns/new" className="inline-flex rounded-full bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200 transition hover:bg-emerald-100">Создать новый сбор</Link> : null}
+        {canOpenBankAccount ? <Link href="/bank-account/open" className="inline-flex rounded-full bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800">Открыть счёт</Link> : null}
       </div>
     </section>
   );
 }
 
-function ManagementCard({ campaignId }: { campaignId: string }) {
+function ManagementCard({ campaign }: { campaign: CampaignListItem }) {
+  const canEdit = campaign.status === "ACTIVE";
+  const campaignId = campaign.id;
   const actions = [
     ["Редактировать описание", `/campaigns/${campaignId}/edit#description`],
     ["Добавить фотографии", `/campaigns/${campaignId}/edit#cover`],
@@ -203,11 +208,15 @@ function ManagementCard({ campaignId }: { campaignId: string }) {
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">управление</p>
       <h2 className="mt-2 text-xl font-semibold text-stone-950">Быстрые действия</h2>
       <div className="mt-5 space-y-2">
-        {actions.map(([action, href]) => (
+        {canEdit ? actions.map(([action, href]) => (
           <Link key={action} href={href} className="flex items-center justify-between rounded-2xl bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-700 transition hover:bg-emerald-50 hover:text-emerald-800">
             {action}<span aria-hidden="true">→</span>
           </Link>
-        ))}
+        )) : (
+          <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+            Редактирование доступно только для активного сбора.
+          </div>
+        )}
         <div className="flex items-center justify-between rounded-2xl bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-400">
           Загрузить документы<span className="text-[10px] uppercase tracking-wide">скоро</span>
         </div>

@@ -161,7 +161,11 @@ async def public_profile(
     return PublicUserProfileOut(
         id=user.id,
         username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name,
         avatar_url=user.avatar_url,
+        bio=user.bio,
+        city=user.city,
         created_at=user.created_at,
         supported_campaigns_count=supported_count,
         total_supported_campaigns=supported_count,

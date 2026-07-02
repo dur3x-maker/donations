@@ -10,7 +10,8 @@ from app.core.logging import log_event
 from app.core.security import decode_token
 from app.db.session import get_session
 from app.models.user import User
-from app.schemas.user import RefreshTokenIn, TokenResponse, UserLoginIn, UserOut, UserRegisterIn
+from app.schemas.user import RefreshTokenIn, TokenResponse, UserLoginIn, UserOut, UserRegisterIn, VerifyEmailIn
+from app.services.email_verification_service import EmailVerificationService, get_email_verification_service
 from app.services.user_service import build_token_response, get_user_by_id, login_user, register_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -18,10 +19,20 @@ logger = logging.getLogger("auth")
 
 
 @router.post("/register", response_model=TokenResponse)
-async def register(payload: UserRegisterIn, request: Request, session: AsyncSession = Depends(get_session)) -> TokenResponse:
+async def register(
+    payload: UserRegisterIn,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    email_verification: EmailVerificationService = Depends(get_email_verification_service),
+) -> TokenResponse:
     client_ip = get_client_ip(request)
     enforce_rate_limit(f"auth:register:{client_ip}", 8, 60, "Слишком много попыток регистрации")
-    return await register_user(session, payload)
+    auth = await register_user(session, payload)
+    user = await get_user_by_id(session, auth.user.id)
+    if user is not None:
+        await email_verification.create_and_send_token(session, user)
+        return build_token_response(user)
+    return auth
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -64,4 +75,23 @@ async def refresh(payload: RefreshTokenIn, request: Request, session: AsyncSessi
 
 @router.post("/me", response_model=UserOut)
 async def me(current_user: User = Depends(get_current_user)) -> User:
+    return current_user
+
+
+@router.post("/verify-email", response_model=UserOut)
+async def verify_email(
+    payload: VerifyEmailIn,
+    session: AsyncSession = Depends(get_session),
+    email_verification: EmailVerificationService = Depends(get_email_verification_service),
+) -> User:
+    return await email_verification.verify(session, payload.token)
+
+
+@router.post("/email-verification", response_model=UserOut)
+async def resend_email_verification(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+    email_verification: EmailVerificationService = Depends(get_email_verification_service),
+) -> User:
+    await email_verification.resend(session, current_user)
     return current_user

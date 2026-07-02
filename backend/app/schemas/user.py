@@ -36,13 +36,44 @@ class UserOut(BaseModel):
     id: UUID
     username: str
     email: EmailStr
+    first_name: str | None = None
+    last_name: str | None = None
     avatar_url: str | None = None
+    bio: str | None = None
+    city: str | None = None
     is_active: bool
     is_verified: bool
     role: str
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserProfileUpdateIn(BaseModel):
+    username: str | None = Field(default=None, min_length=3, max_length=24, pattern=r"^[a-zA-Z0-9_-]{3,24}$")
+    first_name: str | None = Field(default=None, max_length=80)
+    last_name: str | None = Field(default=None, max_length=80)
+    avatar_url: str | None = Field(default=None, max_length=1024)
+    bio: str | None = Field(default=None, max_length=250)
+    city: str | None = Field(default=None, max_length=80)
+
+    @field_validator("username")
+    @classmethod
+    def normalize_username(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        username = value.lower()
+        if username in USERNAME_BLACKLIST:
+            raise ValueError("Username is reserved")
+        return username
+
+    @field_validator("first_name", "last_name", "avatar_url", "bio", "city")
+    @classmethod
+    def clean_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
 
 
 class UserRegisterIn(BaseModel):
@@ -78,6 +109,10 @@ class RefreshTokenIn(BaseModel):
     refresh_token: str = Field(min_length=1)
 
 
+class VerifyEmailIn(BaseModel):
+    token: str = Field(min_length=16, max_length=256)
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
@@ -94,6 +129,9 @@ class ContributionProgressOut(BaseModel):
     required_contributions_count: int = 5
     can_create_campaign: bool
     has_unfinished_campaign: bool = False
+    can_open_bank_account: bool = False
+    has_bank_account: bool = False
+    bank_account_application_status: str | None = None
 
 
 class ProfileContributionOut(BaseModel):
@@ -211,7 +249,11 @@ class CommunityPatronOut(BaseModel):
 class PublicUserProfileOut(BaseModel):
     id: UUID
     username: str
+    first_name: str | None = None
+    last_name: str | None = None
     avatar_url: str | None = None
+    bio: str | None = None
+    city: str | None = None
     created_at: datetime
     supported_campaigns_count: int
     total_supported_campaigns: int

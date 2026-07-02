@@ -1,4 +1,5 @@
 from app.models.activity import Activity, ActivityType
+from app.models.bank_account_application import BankAccountApplication, BankAccountApplicationStatus
 from app.models.campaign import Campaign, CampaignStatus
 from app.models.campaign_completion_report import CampaignCompletionPhoto, CampaignCompletionReport
 from app.models.campaign_subscription import CampaignSubscription
@@ -8,12 +9,15 @@ from app.models.notification import Notification, NotificationType
 from app.models.payment import Payment, PaymentStatus
 from app.models.report import Report, ReportStatus
 from app.models.suspicious_flag import SuspiciousFlag
+from app.models.telegram_moderation_session import TelegramModerationSession
 from app.models.user import User, UserRole
 from app.models.user_achievement import UserAchievement
 
 __all__ = [
     "Activity",
     "ActivityType",
+    "BankAccountApplication",
+    "BankAccountApplicationStatus",
     "Campaign",
     "CampaignCompletionPhoto",
     "CampaignCompletionReport",
@@ -30,6 +34,7 @@ __all__ = [
     "Report",
     "ReportStatus",
     "SuspiciousFlag",
+    "TelegramModerationSession",
     "User",
     "UserAchievement",
     "UserRole",

@@ -1,6 +1,8 @@
 export type Owner = {
   id: string;
   username: string;
+  first_name?: string | null;
+  last_name?: string | null;
   avatar_url?: string | null;
 };
 
@@ -16,7 +18,7 @@ export type CampaignListItem = {
   cover_image_url?: string | null;
   is_verified: boolean;
   is_active: boolean;
-  status: "ACTIVE" | "GOAL_REACHED" | "AWAITING_REPORT" | "COMPLETED";
+  status: "ACTIVE" | "PENDING_REVIEW" | "REVISION_REQUIRED" | "REJECTED" | "GOAL_REACHED" | "AWAITING_REPORT" | "COMPLETED";
   has_completion_report: boolean;
   report_requested_at?: string | null;
   report_completed_at?: string | null;
@@ -75,6 +77,26 @@ export type ContributionProgress = {
   required_contributions_count: number;
   can_create_campaign: boolean;
   has_unfinished_campaign: boolean;
+  can_open_bank_account: boolean;
+  has_bank_account: boolean;
+  bank_account_application_status?: BankAccountApplicationStatus | null;
+};
+
+export type BankAccountApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export type BankAccountApplication = {
+  id: string;
+  user_id: string;
+  status: BankAccountApplicationStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BankAccountApplicationState = {
+  can_open_bank_account: boolean;
+  has_bank_account: boolean;
+  application_status?: BankAccountApplicationStatus | null;
+  application?: BankAccountApplication | null;
 };
 
 export type ProfileSummary = ContributionProgress & {
@@ -123,6 +145,30 @@ export type ProfileImpact = {
   patron_since?: string | null;
 };
 
+export type PlatformStats = {
+  users_count: number;
+  campaigns_total: number;
+  campaigns_active: number;
+  campaigns_completed: number;
+  successful_reports: number;
+  confirmed_contributions: number;
+  total_donated_amount: string;
+};
+
+export type ContactSubject =
+  | "Общий вопрос"
+  | "Сообщить об ошибке"
+  | "Предложение"
+  | "Проблема со сбором"
+  | "Другое";
+
+export type ContactRequestInput = {
+  name: string;
+  email: string;
+  subject: ContactSubject;
+  message: string;
+};
+
 export type UserAchievement = {
   code: string;
   title: string;
@@ -162,11 +208,24 @@ export type AuthUser = {
   id: string;
   username: string;
   email: string;
+  first_name?: string | null;
+  last_name?: string | null;
   avatar_url?: string | null;
+  bio?: string | null;
+  city?: string | null;
   is_active: boolean;
   is_verified: boolean;
   role: "user" | "moderator" | "admin";
   created_at: string;
+};
+
+export type ProfileUpdateInput = {
+  username?: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+  city?: string | null;
 };
 
 export type ReportResponse = {
@@ -259,7 +318,11 @@ export type CampaignUpdatedEvent = {
 export type PublicUserProfile = {
   id: string;
   username: string;
+  first_name?: string | null;
+  last_name?: string | null;
   avatar_url?: string | null;
+  bio?: string | null;
+  city?: string | null;
   created_at: string;
   supported_campaigns_count: number;
   total_supported_campaigns: number;
@@ -284,7 +347,7 @@ export type ActivityItem = {
 
 export type NotificationItem = {
   id: string;
-  type: "donation_received" | "campaign_funded" | "unlock_achieved" | "campaign_goal_reached" | "campaign_report_published" | "campaign_photos_added" | "campaign_author_update_created" | "achievement_unlocked" | "patron_unlocked" | "campaign_report_reminder" | "campaign_subscription_created";
+  type: "donation_received" | "campaign_funded" | "unlock_achieved" | "campaign_goal_reached" | "campaign_report_published" | "campaign_photos_added" | "campaign_author_update_created" | "achievement_unlocked" | "patron_unlocked" | "campaign_report_reminder" | "campaign_subscription_created" | "campaign_moderation";
   title: string;
   body: string;
   campaign_id?: string | null;

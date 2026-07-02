@@ -28,3 +28,39 @@ async def test_public_profile_does_not_expose_email(client, user_factory):
     assert response.status_code == 200
     assert "email" not in response.json()
 
+
+async def test_update_profile_fields_are_visible_publicly(client, user_factory, auth_headers):
+    user = await user_factory(username="old_name")
+    updated = await client.patch(
+        "/api/v1/me",
+        json={
+            "username": "new_name",
+            "first_name": "Никита",
+            "last_name": "Иванов",
+            "bio": "Помогаю историям, которые понимаю.",
+            "city": "Нижний Новгород",
+            "avatar_url": "http://testserver/uploads/avatars/avatar.png",
+        },
+        headers=auth_headers(user),
+    )
+    assert updated.status_code == 200
+    assert updated.json()["username"] == "new_name"
+    assert updated.json()["bio"] == "Помогаю историям, которые понимаю."
+
+    public = await client.get("/api/v1/users/new_name")
+    assert public.status_code == 200
+    assert public.json()["first_name"] == "Никита"
+    assert public.json()["last_name"] == "Иванов"
+    assert public.json()["city"] == "Нижний Новгород"
+    assert public.json()["avatar_url"].endswith("/uploads/avatars/avatar.png")
+
+
+async def test_update_profile_rejects_duplicate_username(client, user_factory, auth_headers):
+    existing = await user_factory(username="taken_name")
+    user = await user_factory(username="free_name")
+    response = await client.patch(
+        "/api/v1/me",
+        json={"username": existing.username},
+        headers=auth_headers(user),
+    )
+    assert response.status_code == 409

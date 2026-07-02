@@ -5,11 +5,13 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
+from app.models.campaign import Campaign
 from app.models.report import Report, ReportStatus
 from app.models.user import User
 from app.schemas.moderation import ReportCreateIn
-from app.services.campaign_service import get_campaign_or_404
+from app.services.admin_event_service import AdminEventService, build_user_report_event
 from app.services.moderation_alert_service import send_moderation_alert
 from app.services.suspicious_flag_service import create_suspicious_flag
 
@@ -23,9 +25,16 @@ async def create_report(
     payload: ReportCreateIn,
     reporter: User | None,
     client_ip: str,
+    admin_events: AdminEventService | None = None,
 ) -> Report:
     _check_report_rate(reporter.id if reporter else None, client_ip)
-    await get_campaign_or_404(session, campaign_id, include_inactive=True)
+    campaign = await session.scalar(
+        select(Campaign)
+        .options(selectinload(Campaign.owner))
+        .where(Campaign.id == campaign_id)
+    )
+    if campaign is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сбор не найден")
 
     report = Report(
         reporter_user_id=reporter.id if reporter else None,
@@ -51,6 +60,8 @@ async def create_report(
 
     await session.commit()
     await session.refresh(report)
+    if admin_events is not None:
+        await admin_events.publish(build_user_report_event(report, campaign, reporter))
     return report
 
 

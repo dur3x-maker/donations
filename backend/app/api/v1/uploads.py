@@ -10,12 +10,14 @@ router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 UPLOAD_DIR = Path("uploads/campaign-covers")
 STORY_PHOTO_DIR = Path("uploads/story-photos")
+AVATAR_DIR = Path("uploads/avatars")
 ALLOWED_IMAGE_TYPES = {
     "image/jpeg": ".jpg",
     "image/png": ".png",
     "image/webp": ".webp",
 }
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
+MAX_AVATAR_SIZE = 2 * 1024 * 1024
 
 
 @router.post("/campaign-cover")
@@ -62,6 +64,29 @@ async def upload_story_photo(
     (STORY_PHOTO_DIR / filename).write_bytes(content)
     base_url = str(request.base_url).rstrip("/")
     return {"url": f"{base_url}/uploads/story-photos/{filename}"}
+
+
+@router.post("/avatar")
+async def upload_avatar(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_current_user),
+) -> dict[str, str]:
+    extension = ALLOWED_IMAGE_TYPES.get(file.content_type or "")
+    if extension is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Допустимы только JPG, PNG и WebP")
+
+    content = await file.read(MAX_AVATAR_SIZE + 1)
+    if len(content) > MAX_AVATAR_SIZE:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Размер аватара не должен превышать 2 МБ")
+    if not _matches_image_signature(content, extension):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Файл не соответствует заявленному формату изображения")
+
+    AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+    filename = f"{current_user.id}-{uuid4().hex}{extension}"
+    (AVATAR_DIR / filename).write_bytes(content)
+    base_url = str(request.base_url).rstrip("/")
+    return {"url": f"{base_url}/uploads/avatars/{filename}"}
 
 
 def _matches_image_signature(content: bytes, extension: str) -> bool:

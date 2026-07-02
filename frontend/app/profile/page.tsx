@@ -5,17 +5,33 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ParticipationCard } from "@/app/components/ParticipationCard";
 import { useAuth } from "@/components/providers/auth-provider";
-import { fetchProfileImpact, fetchProfileSummary, fetchUserAchievements } from "@/lib/api";
+import { fetchProfileImpact, fetchProfileSummary, fetchUserAchievements, resendEmailVerification, updateProfile, uploadAvatar } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
-import type { ProfileImpact, ProfileSummary, UserAchievement } from "@/lib/types";
+import type { AuthUser, ProfileImpact, ProfileSummary, UserAchievement } from "@/lib/types";
+
+const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, refreshAuth } = useAuth();
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [impact, setImpact] = useState<ProfileImpact | null>(null);
   const [achievements, setAchievements] = useState<UserAchievement[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [profileForm, setProfileForm] = useState({
+    first_name: "",
+    last_name: "",
+    username: "",
+    bio: "",
+    city: "",
+    avatar_url: "",
+  });
+  const [profileStatus, setProfileStatus] = useState<string | null>(null);
+  const [emailStatus, setEmailStatus] = useState<string | null>(null);
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+  const [isEmailSending, setIsEmailSending] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.replace("/login?next=/profile");
@@ -32,26 +48,174 @@ export default function ProfilePage() {
       .catch((requestError) => setError(requestError instanceof Error ? requestError.message : "Не удалось загрузить профиль."));
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    if (!user) return;
+    setProfileForm({
+      first_name: user.first_name ?? "",
+      last_name: user.last_name ?? "",
+      username: user.username,
+      bio: user.bio ?? "",
+      city: user.city ?? "",
+      avatar_url: user.avatar_url ?? "",
+    });
+  }, [user]);
+
   if (isLoading || !isAuthenticated || !user) return <LoadingCard />;
   if (!summary || !impact) return error ? <ProfileError message={error} /> : <LoadingCard />;
 
   const level = impact.current_level ?? "Путь помощи еще не начался";
+  const displayName = fullName(user.first_name, user.last_name) || user.username;
+
+  const handleProfileSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsProfileSaving(true);
+    setProfileStatus(null);
+
+    try {
+      const updatedUser = await updateProfile({
+        first_name: emptyToNull(profileForm.first_name),
+        last_name: emptyToNull(profileForm.last_name),
+        username: profileForm.username,
+        bio: emptyToNull(profileForm.bio),
+        city: emptyToNull(profileForm.city),
+        avatar_url: emptyToNull(profileForm.avatar_url),
+      });
+      syncAuthUser(updatedUser);
+      setProfileStatus("Профиль обновлён.");
+    } catch (requestError) {
+      setProfileStatus(requestError instanceof Error ? requestError.message : "Не удалось обновить профиль.");
+    } finally {
+      setIsProfileSaving(false);
+    }
+  };
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      setProfileStatus("Допустимы только JPG, PNG и WebP.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > MAX_AVATAR_SIZE) {
+      setProfileStatus("Размер аватара не должен превышать 2 МБ.");
+      event.target.value = "";
+      return;
+    }
+
+    setIsAvatarUploading(true);
+    setProfileStatus(null);
+    try {
+      const uploaded = await uploadAvatar(file);
+      setProfileForm((current) => ({ ...current, avatar_url: uploaded.url }));
+      setProfileStatus("Фото загружено. Сохраните профиль.");
+    } catch (requestError) {
+      setProfileStatus(requestError instanceof Error ? requestError.message : "Не удалось загрузить фото.");
+    } finally {
+      setIsAvatarUploading(false);
+      event.target.value = "";
+    }
+  };
+
+  const handleResendEmail = async () => {
+    setIsEmailSending(true);
+    setEmailStatus(null);
+    try {
+      await resendEmailVerification();
+      await refreshAuth();
+      setEmailStatus("Письмо отправлено повторно.");
+    } catch (requestError) {
+      setEmailStatus(requestError instanceof Error ? requestError.message : "Не удалось отправить письмо.");
+    } finally {
+      setIsEmailSending(false);
+    }
+  };
 
   return (
     <section className="mx-auto max-w-6xl space-y-5">
       <header className="overflow-hidden rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.18)] md:p-8">
-        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">профиль участника</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">{user.username}</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-300">Ваша история поддержки и вклад в сообщество.</p>
+        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] lg:items-start">
+          <div className="grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+            <ProfileAvatar name={displayName} username={user.username} avatarUrl={profileForm.avatar_url || user.avatar_url} />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">профиль участника</p>
+              <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">{displayName}</h1>
+              <p className="mt-2 text-lg font-medium text-stone-300">@{user.username}</p>
+              <div className="mt-4 flex flex-wrap gap-2 text-sm text-stone-200">
+                {user.is_verified ? <span className="rounded-full bg-emerald-100 px-3 py-1.5 font-semibold text-emerald-900">🟢 Email подтверждён</span> : <span className="rounded-full bg-amber-100 px-3 py-1.5 font-semibold text-amber-900">🟡 Email не подтверждён</span>}
+                <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10">С нами с {formatMonth(user.created_at)}</span>
+                {user.city ? <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10">{user.city}</span> : null}
+              </div>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-stone-100">
+                {user.bio || "Расскажите немного о себе: чем занимаетесь, почему вы на платформе и что для вас значит взаимопомощь."}
+              </p>
+              <div className="mt-5 w-fit rounded-[22px] bg-white/10 px-5 py-4 ring-1 ring-white/15">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">статус участника</p>
+                <p className="mt-2 text-xl font-semibold">{level}</p>
+              </div>
+            </div>
           </div>
-          <div className="w-fit rounded-[22px] bg-white/10 px-5 py-4 ring-1 ring-white/15">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">статус участника</p>
-            <p className="mt-2 text-xl font-semibold">{level}</p>
-          </div>
+
+          <form onSubmit={handleProfileSubmit} className="rounded-[26px] bg-white p-5 text-stone-950 shadow-[0_18px_55px_rgba(0,0,0,0.18)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">редактирование</p>
+                <h2 className="mt-1 text-xl font-semibold">О себе</h2>
+              </div>
+              <label className="cursor-pointer rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-800 transition hover:bg-emerald-50 hover:text-emerald-800">
+                {isAvatarUploading ? "Загрузка..." : "Фото"}
+                <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarChange} disabled={isAvatarUploading || isProfileSaving} />
+              </label>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <ProfileInput label="Имя" value={profileForm.first_name} onChange={(value) => setProfileForm((current) => ({ ...current, first_name: value }))} maxLength={80} />
+              <ProfileInput label="Фамилия" value={profileForm.last_name} onChange={(value) => setProfileForm((current) => ({ ...current, last_name: value }))} maxLength={80} />
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <ProfileInput label="Nickname" value={profileForm.username} onChange={(value) => setProfileForm((current) => ({ ...current, username: value }))} maxLength={24} />
+              <ProfileInput label="Город" value={profileForm.city} onChange={(value) => setProfileForm((current) => ({ ...current, city: value }))} maxLength={80} />
+            </div>
+            <label className="mt-3 block">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">О себе</span>
+              <textarea
+                value={profileForm.bio}
+                onChange={(event) => setProfileForm((current) => ({ ...current, bio: event.target.value }))}
+                maxLength={250}
+                rows={4}
+                className="mt-2 w-full resize-none rounded-2xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+              />
+            </label>
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <span className="text-xs text-stone-500">{profileForm.bio.length}/250</span>
+              <button className="rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60" disabled={isProfileSaving || isAvatarUploading} type="submit">
+                {isProfileSaving ? "Сохраняем..." : "Сохранить профиль"}
+              </button>
+            </div>
+            {profileStatus ? <p className="mt-3 text-sm leading-6 text-stone-600">{profileStatus}</p> : null}
+          </form>
         </div>
       </header>
+
+      {!user.is_verified ? (
+        <section className="rounded-[26px] border border-amber-100 bg-amber-50 p-5 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-amber-950">Подтвердите адрес электронной почты.</h2>
+              <p className="mt-1 text-sm leading-6 text-amber-800">Мы отправим письмо со ссылкой подтверждения на {user.email}.</p>
+              {emailStatus ? <p className="mt-2 text-sm font-medium text-amber-900">{emailStatus}</p> : null}
+            </div>
+            <button
+              type="button"
+              onClick={handleResendEmail}
+              disabled={isEmailSending}
+              className="w-fit rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-70"
+            >
+              {isEmailSending ? "Отправляем..." : "Отправить письмо повторно"}
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <ParticipationCard progress={summary} compact />
 
@@ -303,6 +467,55 @@ function pluralize(value: number, one: string, few: string, many: string) {
   const mod100 = value % 100;
   const word = mod10 === 1 && mod100 !== 11 ? one : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? few : many;
   return `${value} ${word}`;
+}
+
+function ProfileAvatar({ name, username, avatarUrl }: { name: string; username: string; avatarUrl?: string | null }) {
+  if (avatarUrl) {
+    return (
+      <div
+        aria-label={`Фото пользователя ${name}`}
+        className="h-28 w-28 rounded-full bg-cover bg-center shadow-[0_18px_50px_rgba(0,0,0,0.28)] ring-4 ring-white/15 md:h-32 md:w-32"
+        style={{ backgroundImage: `url(${avatarUrl})` }}
+      />
+    );
+  }
+
+  return (
+    <div
+      aria-label={`Аватар пользователя ${username}`}
+      className="flex h-28 w-28 items-center justify-center rounded-full bg-[linear-gradient(135deg,#bbf7d0,#6ee7b7_45%,#fef3c7)] text-4xl font-semibold text-stone-950 shadow-[0_18px_50px_rgba(0,0,0,0.22)] ring-4 ring-white/15 md:h-32 md:w-32"
+    >
+      {(name || username).slice(0, 1).toUpperCase()}
+    </div>
+  );
+}
+
+function ProfileInput({ label, value, onChange, maxLength }: { label: string; value: string; onChange: (value: string) => void; maxLength: number }) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">{label}</span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        maxLength={maxLength}
+        className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+      />
+    </label>
+  );
+}
+
+function fullName(firstName?: string | null, lastName?: string | null) {
+  return [firstName, lastName].filter(Boolean).join(" ").trim();
+}
+
+function emptyToNull(value: string) {
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function syncAuthUser(user: AuthUser) {
+  localStorage.setItem("auth_user", JSON.stringify(user));
+  window.dispatchEvent(new CustomEvent("auth:updated", { detail: user }));
 }
 
 function LoadingCard() {

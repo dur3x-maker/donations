@@ -1,40 +1,39 @@
 import { CampaignCard } from "@/app/components/CampaignCard";
 import { fetchPublicProfile } from "@/lib/api";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 
 export default async function PublicProfilePage({ params }: { params: { username: string } }) {
   const profile = await fetchPublicProfile(params.username);
+  const displayName = fullName(profile.first_name, profile.last_name) || profile.username;
 
   return (
     <section className="space-y-8">
-      <div className="rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:p-10">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-2xl font-semibold text-emerald-900">
-            {profile.username.slice(0, 1).toUpperCase()}
-          </div>
-          <div>
+      <div className="overflow-hidden rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:p-10">
+        <div className="grid gap-6 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
+          <ProfileAvatar name={displayName} username={profile.username} avatarUrl={profile.avatar_url} />
+          <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{profile.username}</h1>
-              {profile.is_verified ? <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-900">проверено</span> : null}
+              <h1 className="min-w-0 text-3xl font-semibold tracking-tight md:text-5xl">{displayName}</h1>
+              {profile.is_verified ? <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-900">Проверенный пользователь</span> : null}
             </div>
-            <p className="mt-2 text-sm text-stone-300">С нами с {formatDate(profile.created_at)}</p>
+            <p className="mt-2 text-lg font-medium text-stone-300">@{profile.username}</p>
+            <div className="mt-4 flex flex-wrap gap-2 text-sm text-stone-200">
+              <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10">С нами с {formatProfileMonth(profile.created_at)}</span>
+              {profile.city ? <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10">{profile.city}</span> : null}
+            </div>
+            {profile.bio ? (
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-stone-100">&ldquo;{profile.bio}&rdquo;</p>
+            ) : (
+              <p className="mt-5 max-w-3xl text-sm leading-6 text-stone-300">Пользователь пока не добавил описание, но его участие и созданные сборы уже видны ниже.</p>
+            )}
           </div>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
-          <p className="text-sm uppercase tracking-[0.16em] text-stone-400">поддержано</p>
-          <p className="mt-2 text-3xl font-semibold text-stone-950">{profile.supported_campaigns_count}</p>
-        </div>
-        <div className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
-          <p className="text-sm uppercase tracking-[0.16em] text-stone-400">внесено</p>
-          <p className="mt-2 text-3xl font-semibold text-stone-950">{formatMoney(profile.total_donated_amount)}</p>
-        </div>
-        <div className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
-          <p className="text-sm uppercase tracking-[0.16em] text-stone-400">закрыто</p>
-          <p className="mt-2 text-3xl font-semibold text-stone-950">{profile.completed_campaigns_count}</p>
-        </div>
+        <StatCard label="Поддержано" value={String(profile.supported_campaigns_count)} />
+        <StatCard label="Внесено" value={formatMoney(profile.total_donated_amount)} />
+        <StatCard label="Закрыто" value={String(profile.completed_campaigns_count)} />
       </div>
 
       <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
@@ -53,7 +52,7 @@ export default async function PublicProfilePage({ params }: { params: { username
             ))}
           </div>
         ) : (
-          <p className="mt-4 text-sm leading-6 text-stone-600">Пока без отметок. Первый вклад обычно самый теплый.</p>
+          <p className="mt-4 text-sm leading-6 text-stone-600">Пока без отметок. Первый вклад обычно самый тёплый.</p>
         )}
       </section>
 
@@ -64,8 +63,8 @@ export default async function PublicProfilePage({ params }: { params: { username
           <AuthorFact label="Историй создано" value={String(profile.author_reputation.campaigns_created)} />
           <AuthorFact label="Успешно завершено" value={String(profile.author_reputation.campaigns_completed)} />
           <AuthorFact label="Всего собрано" value={formatMoney(profile.author_reputation.total_raised_amount)} />
-          <AuthorFact label="Отчеты опубликованы" value={String(profile.author_reputation.campaigns_with_reports)} />
-          <AuthorFact label="Без отчета" value={String(profile.author_reputation.campaigns_without_reports)} />
+          <AuthorFact label="Отчёты опубликованы" value={String(profile.author_reputation.campaigns_with_reports)} />
+          <AuthorFact label="Без отчёта" value={String(profile.author_reputation.campaigns_without_reports)} />
         </div>
       </section>
 
@@ -79,11 +78,41 @@ export default async function PublicProfilePage({ params }: { params: { username
           </div>
         ) : (
           <div className="mt-5 rounded-[28px] border border-stone-200 bg-white p-5 text-stone-600 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
-            Этот участник пока не открывал сбор, но каждая поддержка все равно укрепляет сообщество.
+            Этот участник пока не открывал сбор, но каждая поддержка всё равно укрепляет сообщество.
           </div>
         )}
       </section>
     </section>
+  );
+}
+
+function ProfileAvatar({ name, username, avatarUrl }: { name: string; username: string; avatarUrl?: string | null }) {
+  if (avatarUrl) {
+    return (
+      <div
+        aria-label={`Фото пользователя ${name}`}
+        className="h-28 w-28 rounded-full bg-cover bg-center shadow-[0_18px_50px_rgba(0,0,0,0.28)] ring-4 ring-white/15 md:h-36 md:w-36"
+        style={{ backgroundImage: `url(${avatarUrl})` }}
+      />
+    );
+  }
+
+  return (
+    <div
+      aria-label={`Аватар пользователя ${username}`}
+      className="flex h-28 w-28 items-center justify-center rounded-full bg-[linear-gradient(135deg,#bbf7d0,#6ee7b7_45%,#fef3c7)] text-4xl font-semibold text-stone-950 shadow-[0_18px_50px_rgba(0,0,0,0.22)] ring-4 ring-white/15 md:h-36 md:w-36 md:text-5xl"
+    >
+      {initialsFor(name, username)}
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
+      <p className="text-sm uppercase tracking-[0.16em] text-stone-400">{label}</p>
+      <p className="mt-2 text-3xl font-semibold text-stone-950">{value}</p>
+    </div>
   );
 }
 
@@ -94,6 +123,18 @@ function AuthorFact({ label, value }: { label: string; value: string }) {
       <p className="mt-2 text-xl font-semibold text-stone-950">{value}</p>
     </div>
   );
+}
+
+function fullName(firstName?: string | null, lastName?: string | null) {
+  return [firstName, lastName].filter(Boolean).join(" ").trim();
+}
+
+function initialsFor(name: string, username: string) {
+  return (name || username).slice(0, 1).toUpperCase();
+}
+
+function formatProfileMonth(value: string) {
+  return new Intl.DateTimeFormat("ru-RU", { month: "long", year: "numeric" }).format(new Date(value));
 }
 
 function achievementLabel(value: string) {

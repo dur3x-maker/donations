@@ -20,6 +20,7 @@ class NotificationType(str, enum.Enum):
     patron_unlocked = "patron_unlocked"
     campaign_report_reminder = "campaign_report_reminder"
     campaign_subscription_created = "campaign_subscription_created"
+    campaign_moderation = "campaign_moderation"
 
 
 class Notification(UUIDMixin, TimestampMixin, Base):

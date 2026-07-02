@@ -12,6 +12,9 @@ from app.db.base import Base, TimestampMixin, UUIDMixin, utcnow
 
 class CampaignStatus(str, enum.Enum):
     active = "ACTIVE"
+    pending_review = "PENDING_REVIEW"
+    revision_required = "REVISION_REQUIRED"
+    rejected = "REJECTED"
     goal_reached = "GOAL_REACHED"
     awaiting_report = "AWAITING_REPORT"
     completed = "COMPLETED"
@@ -26,10 +29,10 @@ class Campaign(UUIDMixin, TimestampMixin, Base):
             "owner_id",
             unique=True,
             postgresql_where=text(
-                "is_active IS TRUE AND status IN ('ACTIVE', 'GOAL_REACHED', 'AWAITING_REPORT')"
+                "is_active IS TRUE AND status IN ('ACTIVE', 'PENDING_REVIEW', 'REVISION_REQUIRED', 'GOAL_REACHED', 'AWAITING_REPORT')"
             ),
             sqlite_where=text(
-                "is_active = 1 AND status IN ('ACTIVE', 'GOAL_REACHED', 'AWAITING_REPORT')"
+                "is_active = 1 AND status IN ('ACTIVE', 'PENDING_REVIEW', 'REVISION_REQUIRED', 'GOAL_REACHED', 'AWAITING_REPORT')"
             ),
         ),
     )

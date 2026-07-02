@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fetchActivityFeed, fetchCampaigns, fetchCompletedCampaigns } from "@/lib/api";
+import { fetchActivityFeed, fetchCampaigns, fetchCompletedCampaigns, fetchPlatformStats } from "@/lib/api";
 import { ActivityFeed } from "./components/ActivityFeed";
 import { CompletedCampaignCard } from "./components/CompletedCampaignCard";
 import { LandingMotion } from "./components/LandingMotion";
@@ -10,16 +10,17 @@ import { TrustCultureSection } from "./components/TrustCultureSection";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [campaigns, completedCampaigns, activities] = await Promise.all([
+  const [campaigns, completedCampaigns, activities, stats] = await Promise.all([
     fetchCampaigns({ page_size: 7 }).catch(() => []),
     fetchCompletedCampaigns({ page_size: 3 }).catch(() => []),
     fetchActivityFeed({ page_size: 5 }).catch(() => []),
+    fetchPlatformStats().catch(() => null),
   ]);
   const homepageCampaigns = campaigns.slice(0, 7);
 
   return (
     <div className="space-y-12 pb-14 md:space-y-14">
-      <LandingMotion />
+      <LandingMotion stats={stats} featuredCampaign={homepageCampaigns[0] ?? null} />
 
       <section id="campaigns" className="scroll-mt-24">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">

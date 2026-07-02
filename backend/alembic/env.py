@@ -7,12 +7,14 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from app.core.config import settings
 from app.db.base import Base
 from app.models.activity import Activity
+from app.models.bank_account_application import BankAccountApplication
 from app.models.campaign import Campaign
 from app.models.contribution import Contribution
 from app.models.notification import Notification
 from app.models.payment import Payment
 from app.models.report import Report
 from app.models.suspicious_flag import SuspiciousFlag
+from app.models.telegram_moderation_session import TelegramModerationSession
 from app.models.user import User
 
 config = context.config

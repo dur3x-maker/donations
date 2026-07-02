@@ -20,7 +20,7 @@ from app.models.user import User
 from app.schemas.campaign import CampaignListItem
 from app.schemas.common import OwnerOut
 from app.schemas.contribution import RecentDonationOut
-from app.schemas.user import OwnerCampaignStatsOut, OwnerDashboardOut, ProfileAchievementOut, ProfileContributionOut, ProfileSummaryOut, ProfileTimelineItemOut, TokenResponse, UserLoginIn, UserRegisterIn
+from app.schemas.user import OwnerCampaignStatsOut, OwnerDashboardOut, ProfileAchievementOut, ProfileContributionOut, ProfileSummaryOut, ProfileTimelineItemOut, TokenResponse, UserLoginIn, UserProfileUpdateIn, UserRegisterIn
 from app.services.activity_service import create_once_activity
 from app.services.level_service import current_level_for
 from app.services.notification_service import create_notification
@@ -82,6 +82,29 @@ async def login_user(session: AsyncSession, payload: UserLoginIn) -> TokenRespon
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Профиль неактивен")
     return build_token_response(user)
+
+
+async def update_user_profile(session: AsyncSession, user: User, payload: UserProfileUpdateIn) -> User:
+    data = payload.model_dump(exclude_unset=True)
+
+    username = data.get("username")
+    if username and username != user.username:
+        existing = await session.scalar(select(User.id).where(User.username == username, User.id != user.id))
+        if existing is not None:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Имя пользователя уже занято")
+        user.username = username
+
+    for field in ("first_name", "last_name", "avatar_url", "bio", "city"):
+        if field in data:
+            setattr(user, field, data[field])
+
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Имя пользователя уже занято")
+    await session.refresh(user)
+    return user
 
 
 async def link_anonymous_contributions(

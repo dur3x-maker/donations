@@ -25,6 +25,7 @@ from app.services.contribution_service import donate, get_recent_donations
 from app.services.report_service import create_report
 from app.services.follow_up_service import get_campaign_subscription, set_campaign_subscription
 from app.services.withdrawal_service import get_withdrawal_info
+from app.services.admin_event_service import AdminEventService, get_admin_event_service
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
@@ -55,8 +56,9 @@ async def create_campaign_endpoint(
     payload: CampaignCreate,
     current_user: User = Depends(require_current_user),
     session: AsyncSession = Depends(get_session),
+    admin_events: AdminEventService = Depends(get_admin_event_service),
 ) -> CampaignDetail:
-    campaign = await create_campaign(session, current_user, payload)
+    campaign = await create_campaign(session, current_user, payload, admin_events)
     return await get_campaign_detail(session, campaign.id)
 
 
@@ -214,6 +216,7 @@ async def report_campaign(
     request: Request,
     current_user: User | None = Depends(get_optional_current_user),
     session: AsyncSession = Depends(get_session),
+    admin_events: AdminEventService = Depends(get_admin_event_service),
 ) -> ReportOut:
     actor = str(current_user.id) if current_user else get_client_ip(request)
     enforce_rate_limit(f"report:{actor}", 5, 3600, "Слишком много жалоб. Попробуйте позже.")
@@ -223,6 +226,7 @@ async def report_campaign(
         payload,
         current_user,
         request.client.host if request.client else "unknown",
+        admin_events,
     )
     return ReportOut(
         id=report.id,

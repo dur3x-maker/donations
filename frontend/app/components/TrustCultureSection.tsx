@@ -1,16 +1,13 @@
 const trustSteps = [
   {
-    number: "01",
     title: "Поддержите",
     text: "Выберите историю и сделайте вклад, который вам по силам.",
   },
   {
-    number: "02",
     title: "Сохраните участие",
-    text: "Подтвержденная помощь засчитывается в вашем профиле.",
+    text: "Подтверждённая помощь засчитывается в вашем профиле.",
   },
   {
-    number: "03",
     title: "Откройте цель",
     text: "После участия в других сборах можно рассказать свою историю.",
   },
@@ -25,7 +22,7 @@ export function TrustCultureSection() {
           <h2 className="mt-4 text-4xl font-semibold leading-[1.05] tracking-tight md:text-5xl">
             Сначала участвуете.
             <br />
-            Потом открываете свое.
+            Потом открываете своё.
           </h2>
           <p className="mt-5 max-w-xl text-base leading-7 text-stone-300">
             TipForTea устроен так, чтобы площадка начиналась с помощи. Здесь люди не только просят поддержки, но и сначала становятся частью общего круга участия.
@@ -34,9 +31,8 @@ export function TrustCultureSection() {
 
         <div className="grid gap-3 sm:grid-cols-3 lg:gap-4">
           {trustSteps.map((step) => (
-            <div key={step.number} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
-              <span className="text-sm font-semibold text-emerald-300">{step.number}</span>
-              <h3 className="mt-5 text-xl font-semibold text-white">{step.title}</h3>
+            <div key={step.title} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
+              <h3 className="text-xl font-semibold text-white">{step.title}</h3>
               <p className="mt-3 text-sm leading-6 text-stone-300">{step.text}</p>
             </div>
           ))}
