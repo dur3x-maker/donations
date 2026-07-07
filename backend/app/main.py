@@ -101,7 +101,7 @@ def _error_response(request: Request, status_code: int, detail) -> JSONResponse:
     request_id = getattr(request.state, "request_id", None) or get_request_id()
     response = JSONResponse(
         status_code=status_code,
-        content={"detail": str(detail), "request_id": request_id},
+        content={"detail": str(detail)},
     )
     if request_id:
         response.headers["X-Request-ID"] = request_id

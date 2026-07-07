@@ -113,6 +113,20 @@ class VerifyEmailIn(BaseModel):
     token: str = Field(min_length=16, max_length=256)
 
 
+class ForgotPasswordIn(BaseModel):
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return validate_realistic_email(value)
+
+
+class ResetPasswordIn(BaseModel):
+    token: str = Field(min_length=16, max_length=256)
+    password: str = Field(min_length=8)
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str

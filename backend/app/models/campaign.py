@@ -18,6 +18,7 @@ class CampaignStatus(str, enum.Enum):
     goal_reached = "GOAL_REACHED"
     awaiting_report = "AWAITING_REPORT"
     completed = "COMPLETED"
+    archived = "ARCHIVED"
 
 
 class Campaign(UUIDMixin, TimestampMixin, Base):

@@ -90,6 +90,7 @@ def build_user_report_event(report: Report, campaign: Campaign, reporter: User |
         type=AdminEventType.user_report,
         title="🚨 Новая жалоба",
         sections=sections,
+        metadata={"campaign_id": str(campaign.id)},
     )
 
 
@@ -193,15 +194,22 @@ def _user_display_name(user: User) -> str:
 
 
 def _reply_markup_for_event(event: AdminEvent) -> dict | None:
-    if event.type != AdminEventType.high_value_campaign or not event.metadata:
+    if not event.metadata:
         return None
     campaign_id = event.metadata.get("campaign_id")
     if not campaign_id:
         return None
+    admin_actions = [
+        [{"text": "Скрыть сбор", "callback_data": f"admin:archive:{campaign_id}"}],
+        [{"text": "Пересчитать сбор", "callback_data": f"admin:recalc:{campaign_id}"}],
+    ]
+    if event.type != AdminEventType.high_value_campaign:
+        return {"inline_keyboard": admin_actions}
     return {
         "inline_keyboard": [
             [{"text": "✅ Одобрить", "callback_data": f"hvc:approve:{campaign_id}"}],
             [{"text": "✏️ Вернуть на доработку", "callback_data": f"hvc:revision:{campaign_id}"}],
             [{"text": "❌ Отклонить", "callback_data": f"hvc:reject:{campaign_id}"}],
+            *admin_actions,
         ]
     }

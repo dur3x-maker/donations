@@ -10,8 +10,9 @@ from app.core.logging import log_event
 from app.core.security import decode_token
 from app.db.session import get_session
 from app.models.user import User
-from app.schemas.user import RefreshTokenIn, TokenResponse, UserLoginIn, UserOut, UserRegisterIn, VerifyEmailIn
+from app.schemas.user import ForgotPasswordIn, RefreshTokenIn, ResetPasswordIn, TokenResponse, UserLoginIn, UserOut, UserRegisterIn, VerifyEmailIn
 from app.services.email_verification_service import EmailVerificationService, get_email_verification_service
+from app.services.password_reset_service import PasswordResetService, get_password_reset_service
 from app.services.user_service import build_token_response, get_user_by_id, login_user, register_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -95,3 +96,29 @@ async def resend_email_verification(
 ) -> User:
     await email_verification.resend(session, current_user)
     return current_user
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    payload: ForgotPasswordIn,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    password_reset: PasswordResetService = Depends(get_password_reset_service),
+) -> dict[str, str]:
+    client_ip = get_client_ip(request)
+    enforce_rate_limit(f"auth:forgot-password:{client_ip}", 5, 60, "Слишком много запросов восстановления. Попробуйте позже.")
+    await password_reset.request_reset(session, payload.email)
+    return {"message": "Если email зарегистрирован, мы отправили ссылку для восстановления пароля."}
+
+
+@router.post("/reset-password", response_model=TokenResponse)
+async def reset_password(
+    payload: ResetPasswordIn,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    password_reset: PasswordResetService = Depends(get_password_reset_service),
+) -> TokenResponse:
+    client_ip = get_client_ip(request)
+    enforce_rate_limit(f"auth:reset-password:{client_ip}", 8, 60, "Слишком много попыток восстановления. Попробуйте позже.")
+    user = await password_reset.reset_password(session, payload.token, payload.password)
+    return build_token_response(user)

@@ -19,6 +19,8 @@ class User(UUIDMixin, TimestampMixin, Base):
 
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     verification_token: Mapped[str | None] = mapped_column(String(128), unique=True, index=True)
+    password_reset_token: Mapped[str | None] = mapped_column(String(128), unique=True, index=True)
+    password_reset_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     username: Mapped[str] = mapped_column(String(24), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     first_name: Mapped[str | None] = mapped_column(String(80))

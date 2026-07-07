@@ -11,10 +11,12 @@ from app.models.activity import ActivityType
 from app.models.campaign import Campaign, CampaignStatus
 from app.models.notification import NotificationType
 from app.models.telegram_moderation_session import TelegramModerationSession
+from app.services.campaign_service import recalculate_campaign_aggregates
 from app.services.activity_service import create_activity
 from app.services.notification_service import create_notification
 
 ACTION_PREFIX = "hvc"
+ADMIN_ACTION_PREFIX = "admin"
 
 
 async def handle_telegram_update(
@@ -52,6 +54,24 @@ async def _handle_callback_query(
     admin = callback_query.get("from") or {}
     admin_id = str(admin.get("id") or "")
     admin_name = _admin_name(admin)
+
+    if action == "archive":
+        await _ask_archive_confirmation(chat_id, message_id, campaign_id, telegram)
+        if callback_id:
+            await telegram.answer_callback_query(callback_id, "Подтвердите скрытие сбора.")
+        return
+
+    if action == "confirm_archive":
+        ok = await _archive_campaign(session, campaign_id, chat_id, message_id, admin_name, telegram)
+        if callback_id:
+            await telegram.answer_callback_query(callback_id, "Сбор скрыт." if ok else "Сбор не найден.")
+        return
+
+    if action == "recalc":
+        ok = await _recalculate_campaign(session, campaign_id, chat_id, message_id, admin_name, telegram)
+        if callback_id:
+            await telegram.answer_callback_query(callback_id, "Пересчет выполнен." if ok else "Сбор не найден.")
+        return
 
     if action == "revision":
         await _start_revision(session, campaign_id, chat_id, message_id, admin_id, admin_name, telegram)
@@ -186,6 +206,68 @@ async def _finalize_moderation(
     return True
 
 
+async def _ask_archive_confirmation(
+    chat_id: str,
+    message_id: int,
+    campaign_id: UUID,
+    telegram: TelegramNotifier,
+) -> None:
+    await telegram.edit_message_text(
+        chat_id,
+        message_id,
+        "Скрыть сбор из публичной части?\n\nСбор останется в базе, платежи и донаты сохранятся.",
+        reply_markup={
+            "inline_keyboard": [
+                [{"text": "Да, скрыть сбор", "callback_data": f"{ADMIN_ACTION_PREFIX}:confirm_archive:{campaign_id}"}],
+                [{"text": "Отмена", "callback_data": f"{ADMIN_ACTION_PREFIX}:recalc:{campaign_id}"}],
+            ]
+        },
+    )
+
+
+async def _archive_campaign(
+    session: AsyncSession,
+    campaign_id: UUID,
+    chat_id: str,
+    message_id: int,
+    admin_name: str,
+    telegram: TelegramNotifier,
+) -> bool:
+    campaign = await _campaign_any(session, campaign_id)
+    if campaign is None:
+        await telegram.edit_message_text(chat_id, message_id, _final_text("Сбор не найден", admin_name), reply_markup={"inline_keyboard": []})
+        return False
+
+    campaign.status = CampaignStatus.archived
+    campaign.is_active = False
+    await session.commit()
+    await telegram.edit_message_text(chat_id, message_id, _final_text("Сбор скрыт", admin_name), reply_markup={"inline_keyboard": []})
+    return True
+
+
+async def _recalculate_campaign(
+    session: AsyncSession,
+    campaign_id: UUID,
+    chat_id: str,
+    message_id: int,
+    admin_name: str,
+    telegram: TelegramNotifier,
+) -> bool:
+    campaign = await _campaign_any(session, campaign_id)
+    if campaign is None:
+        await telegram.edit_message_text(chat_id, message_id, _final_text("Сбор не найден", admin_name), reply_markup={"inline_keyboard": []})
+        return False
+
+    campaign = await recalculate_campaign_aggregates(session, campaign_id)
+    await telegram.edit_message_text(
+        chat_id,
+        message_id,
+        _final_text(f"Пересчет выполнен\nСумма: {campaign.current_amount}\nСтатус: {campaign.status.value}", admin_name),
+        reply_markup={"inline_keyboard": []},
+    )
+    return True
+
+
 async def _pending_campaign(session: AsyncSession, campaign_id: UUID) -> Campaign | None:
     return await session.scalar(
         select(Campaign)
@@ -195,9 +277,19 @@ async def _pending_campaign(session: AsyncSession, campaign_id: UUID) -> Campaig
     )
 
 
+async def _campaign_any(session: AsyncSession, campaign_id: UUID) -> Campaign | None:
+    return await session.scalar(select(Campaign).where(Campaign.id == campaign_id).with_for_update())
+
+
 def _parse_callback_data(data: str) -> tuple[str, UUID] | None:
     parts = data.split(":")
-    if len(parts) != 3 or parts[0] != ACTION_PREFIX or parts[1] not in {"approve", "revision", "reject"}:
+    if len(parts) != 3:
+        return None
+    if parts[0] == ACTION_PREFIX and parts[1] not in {"approve", "revision", "reject"}:
+        return None
+    if parts[0] == ADMIN_ACTION_PREFIX and parts[1] not in {"archive", "confirm_archive", "recalc"}:
+        return None
+    if parts[0] not in {ACTION_PREFIX, ADMIN_ACTION_PREFIX}:
         return None
     try:
         return parts[1], UUID(parts[2])

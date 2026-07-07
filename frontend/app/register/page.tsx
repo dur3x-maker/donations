@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
+import { UserErrorAlert } from "@/components/user-error-alert";
+import { toUserError, type UserError } from "@/lib/user-errors";
 import { EMAIL_HINT, EMAIL_PATTERN, USERNAME_HINT, USERNAME_PATTERN } from "@/lib/validation";
 
 export default function RegisterPage() {
@@ -15,7 +17,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<UserError | null>(null);
   const isPasswordConfirmed = confirmPassword.length > 0 && password === confirmPassword;
   const isSubmitDisabled = isSubmitting || !isPasswordConfirmed;
 
@@ -30,7 +32,7 @@ export default function RegisterPage() {
       await register({ email, username, password });
       router.push(searchParams.get("next") || "/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Не получилось зарегистрироваться");
+      setError(toUserError(err, { title: "Не удалось зарегистрироваться" }));
     } finally {
       setIsSubmitting(false);
     }
@@ -38,13 +40,13 @@ export default function RegisterPage() {
 
   return (
     <section className="mx-auto max-w-xl space-y-6">
-      <div className="rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:p-10">
+      <div className="rounded-[24px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:rounded-[32px] md:p-10">
         <p className="text-sm font-medium uppercase tracking-[0.18em] text-emerald-300">новый профиль</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-5xl">Создать аккаунт</h1>
         <p className="mt-4 leading-7 text-stone-300">Имя пользователя: 3-24 символа, латиница, цифры и подчеркивание.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-[24px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)] md:rounded-[28px]">
         <label className="block text-sm font-medium text-stone-700">
           Эл. почта
           <input
@@ -86,9 +88,7 @@ export default function RegisterPage() {
             onChange={(event) => setPassword(event.target.value)}
             required
           />
-          <span id="password-help" className="mt-2 block text-xs font-normal text-stone-500">
-            Минимум 8 символов
-          </span>
+          <span id="password-help" className="mt-2 block text-xs font-normal text-stone-500">Минимум 8 символов</span>
         </div>
         <div className="block text-sm font-medium text-stone-700">
           <label htmlFor="confirm-password">Повторите пароль</label>
@@ -103,30 +103,26 @@ export default function RegisterPage() {
             required
           />
           {confirmPassword ? (
-            <span
-              id="confirm-password-status"
-              aria-live="polite"
-              className={`mt-2 block text-xs font-normal ${
-                isPasswordConfirmed ? "text-emerald-700" : "text-rose-500"
-              }`}
-            >
+            <span id="confirm-password-status" aria-live="polite" className={`mt-2 block text-xs font-normal ${isPasswordConfirmed ? "text-emerald-700" : "text-rose-500"}`}>
               {isPasswordConfirmed ? "Пароли совпадают" : "Пароли не совпадают"}
             </span>
           ) : null}
         </div>
-        <button
-          className="rounded-full bg-stone-950 px-5 py-3 font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
-          disabled={isSubmitDisabled}
-          type="submit"
-        >
-          {isSubmitting ? "Создаем..." : "Зарегистрироваться"}
-        </button>
-        <Link href="/login" className="ml-3 text-sm font-medium text-emerald-800 hover:text-emerald-900">
-          Уже есть аккаунт
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            className="rounded-full bg-stone-950 px-5 py-3 font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={isSubmitDisabled}
+            type="submit"
+          >
+            {isSubmitting ? "Создаем..." : "Зарегистрироваться"}
+          </button>
+          <Link href="/login" className="text-sm font-medium text-emerald-800 hover:text-emerald-900">
+            Уже есть аккаунт
+          </Link>
+        </div>
       </form>
 
-      {error ? <pre className="whitespace-pre-wrap rounded-2xl border border-red-100 bg-red-50 p-4 text-xs text-red-700">{error}</pre> : null}
+      {error ? <UserErrorAlert error={error} /> : null}
     </section>
   );
 }

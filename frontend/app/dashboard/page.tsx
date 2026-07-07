@@ -93,7 +93,7 @@ function OwnerView({ dashboard, campaign, progress }: { dashboard: OwnerDashboar
   const canCreateAnotherCampaign = campaign.status === "COMPLETED" && progress?.can_create_campaign;
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Metric label="Собрано" value={formatMoney(campaign.current_amount)} tone="green" />
         <Metric label="Поддержали" value={`${stats.unique_contributors_count} чел.`} />
         <Metric label="Сегодня" value={`+${formatMoney(stats.today_amount)}`} tone="lime" />
@@ -272,7 +272,7 @@ function LoadingCard() {
 }
 
 function DashboardSkeleton() {
-  return <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-24 animate-pulse rounded-[22px] bg-white shadow-sm" />)}</div>;
+  return <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-24 animate-pulse rounded-[22px] bg-white shadow-sm" />)}</div>;
 }
 
 function DashboardError({ message }: { message: string }) {

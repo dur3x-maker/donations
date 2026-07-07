@@ -145,7 +145,6 @@ export async function request<T>(path: string, init?: RequestInit, retry = true)
 }
 
 async function readErrorMessage(response: Response) {
-  const requestId = response.headers.get("x-request-id");
   let message = `Запрос не удался: ${response.status}`;
 
   try {
@@ -158,7 +157,7 @@ async function readErrorMessage(response: Response) {
     if (text) message = text;
   }
 
-  return requestId ? `${message} (запрос ${requestId})` : message;
+  return message;
 }
 
 export function fetchCampaigns(params?: { page?: number; page_size?: number; sort?: "newest" | "oldest" | "most_funded" | "least_funded"; q?: string }) {
@@ -410,6 +409,20 @@ export function verifyEmail(token: string) {
 
 export function resendEmailVerification() {
   return request<AuthUser>("/api/v1/auth/email-verification", { method: "POST" });
+}
+
+export function forgotPassword(email: string) {
+  return request<{ message: string }>("/api/v1/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  }, false);
+}
+
+export function resetPassword(body: { token: string; password: string }) {
+  return request<AuthResponse>("/api/v1/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify(body),
+  }, false);
 }
 
 export function loginRequest(body: { email: string; password: string }) {

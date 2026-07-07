@@ -4,8 +4,10 @@ import Link from "next/link";
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ParticipationCard } from "@/app/components/ParticipationCard";
+import { UserErrorAlert } from "@/components/user-error-alert";
 import { useAuth } from "@/components/providers/auth-provider";
 import { createCampaign, fetchContributionProgress, uploadCampaignCover } from "@/lib/api";
+import { toUserError, type UserError } from "@/lib/user-errors";
 import type { CampaignCategory, ContributionProgress } from "@/lib/types";
 import {
   CAMPAIGN_DESCRIPTION_MAX_LENGTH,
@@ -58,7 +60,7 @@ export default function NewCampaignPage() {
   const [coverImages, setCoverImages] = useState<CoverImagePreview[]>([]);
   const [supportingDocuments, setSupportingDocuments] = useState<SupportingDocument[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<UserError | null>(null);
   const coverImagesRef = useRef<CoverImagePreview[]>([]);
   const isLargeTargetAmount = Number(targetAmount) > 1_000_000;
 
@@ -68,7 +70,7 @@ export default function NewCampaignPage() {
     try {
       setContributionProgress(await fetchContributionProgress());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Не получилось загрузить прогресс");
+      setError(toUserError(err, { title: "Не удалось загрузить прогресс" }));
     } finally {
       setIsProgressLoading(false);
     }
@@ -172,7 +174,7 @@ export default function NewCampaignPage() {
       });
       router.push(`/campaigns/${campaign.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Не получилось создать сбор");
+      setError(toUserError(err, { title: "Не удалось создать сбор" }));
       await loadContributionProgress();
     } finally {
       setIsSubmitting(false);
@@ -207,7 +209,7 @@ export default function NewCampaignPage() {
           </Link>
         </div>
 
-        {error ? <pre className="whitespace-pre-wrap rounded-2xl border border-red-100 bg-red-50 p-4 text-xs text-red-700">{error}</pre> : null}
+        {error ? <UserErrorAlert error={error} /> : null}
       </section>
     );
   }
@@ -351,7 +353,7 @@ export default function NewCampaignPage() {
         </button>
       </form>
 
-      {error ? <pre className="whitespace-pre-wrap rounded-2xl border border-red-100 bg-red-50 p-4 text-xs text-red-700">{error}</pre> : null}
+      {error ? <UserErrorAlert error={error} /> : null}
     </section>
   );
 }

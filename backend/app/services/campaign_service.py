@@ -203,13 +203,13 @@ async def get_completed_campaigns(
     ]
 
 
-async def get_campaign_detail(session: AsyncSession, campaign_id: UUID) -> CampaignDetail:
+async def get_campaign_detail(session: AsyncSession, campaign_id: UUID, include_hidden: bool = False) -> CampaignDetail:
     campaign = await session.scalar(
         select(Campaign)
         .options(selectinload(Campaign.owner))
         .where(Campaign.id == campaign_id)
     )
-    if campaign is None:
+    if campaign is None or (not include_hidden and (not campaign.is_active or campaign.status == CampaignStatus.archived)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сбор не найден")
 
     contributors_count = await get_contributors_count(session, campaign_id)
@@ -238,7 +238,7 @@ async def get_campaign_detail(session: AsyncSession, campaign_id: UUID) -> Campa
 
 async def get_campaign_or_404(session: AsyncSession, campaign_id: UUID, include_inactive: bool = False) -> Campaign:
     campaign = await session.get(Campaign, campaign_id)
-    if campaign is None or (not include_inactive and not campaign.is_active):
+    if campaign is None or (not include_inactive and (not campaign.is_active or campaign.status == CampaignStatus.archived)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сбор не найден")
     return campaign
 
@@ -329,18 +329,51 @@ async def update_campaign(session: AsyncSession, campaign_id: UUID, owner: User,
     return campaign
 
 
-async def delete_campaign(session: AsyncSession, campaign_id: UUID, owner: User) -> None:
+async def archive_campaign(session: AsyncSession, campaign_id: UUID, owner: User) -> None:
     campaign = await get_campaign_or_404(session, campaign_id)
     if campaign.owner_id != owner.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Только автор может удалить сбор")
 
-    await session.delete(campaign)
+    campaign.status = CampaignStatus.archived
+    campaign.is_active = False
     await session.commit()
 
 
 async def set_campaign_active(session: AsyncSession, campaign_id: UUID, is_active: bool) -> Campaign:
     campaign = await get_campaign_or_404(session, campaign_id, include_inactive=True)
     campaign.is_active = is_active
+    if not is_active:
+        campaign.status = CampaignStatus.archived
+    elif campaign.status == CampaignStatus.archived:
+        campaign.status = CampaignStatus.active
+    await session.commit()
+    await session.refresh(campaign)
+    return campaign
+
+
+async def recalculate_campaign_aggregates(session: AsyncSession, campaign_id: UUID) -> Campaign:
+    campaign = await get_campaign_or_404(session, campaign_id, include_inactive=True)
+    total_amount, _contributors_count = (
+        await session.execute(
+            select(
+                func.coalesce(func.sum(Contribution.amount), 0),
+                _contributors_count_expr(),
+            )
+            .select_from(Contribution)
+            .join(Payment, Payment.contribution_id == Contribution.id)
+            .where(
+                Contribution.campaign_id == campaign.id,
+                Contribution.status == ContributionStatus.confirmed,
+                Payment.status == PaymentStatus.succeeded,
+                Contribution.amount > 0,
+            )
+        )
+    ).one()
+
+    campaign.current_amount = Decimal(total_amount or 0)
+    if campaign.status != CampaignStatus.archived:
+        campaign.is_active = True
+        campaign.status = CampaignStatus.awaiting_report if campaign.current_amount >= campaign.target_amount else CampaignStatus.active
     await session.commit()
     await session.refresh(campaign)
     return campaign

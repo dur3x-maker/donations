@@ -9,7 +9,7 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
   const visibleActivities = activities.slice(0, 3);
 
   return (
-    <section>
+    <section id="activity" className="scroll-mt-24">
       <div className="mb-3">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">активность платформы</p>

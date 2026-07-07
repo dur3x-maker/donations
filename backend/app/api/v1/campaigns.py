@@ -12,8 +12,8 @@ from app.schemas.moderation import ReportCreateIn, ReportOut
 from app.schemas.subscription import CampaignSubscriptionOut
 from app.schemas.withdrawal import WithdrawalInfoOut
 from app.services.campaign_service import (
+    archive_campaign,
     create_campaign,
-    delete_campaign,
     get_campaign_detail,
     get_campaigns,
     get_completed_campaigns,
@@ -187,7 +187,7 @@ async def delete_campaign_endpoint(
     current_user: User = Depends(require_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> None:
-    await delete_campaign(session, campaign_id, current_user)
+    await archive_campaign(session, campaign_id, current_user)
 
 
 @router.post("/{campaign_id}/donate", response_model=DonateOut)

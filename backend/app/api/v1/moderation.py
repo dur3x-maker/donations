@@ -71,7 +71,7 @@ async def hide_campaign(
     session: AsyncSession = Depends(get_session),
 ) -> CampaignDetail:
     await set_campaign_active(session, campaign_id, False)
-    return await get_campaign_detail(session, campaign_id)
+    return await get_campaign_detail(session, campaign_id, include_hidden=True)
 
 
 @router.post("/campaigns/{campaign_id}/restore", response_model=CampaignDetail)
