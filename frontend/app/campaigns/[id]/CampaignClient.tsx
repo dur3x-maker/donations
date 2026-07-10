@@ -332,11 +332,11 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
   return (
     <div className="space-y-16 md:space-y-24">
       <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-stone-950">
-        <div className="relative min-h-[calc(100vh-84px)] overflow-hidden">
+        <div className="relative min-h-[72vh] overflow-hidden md:min-h-[80vh]">
           {campaign.cover_image_url ? <img src={campaign.cover_image_url} alt="" className="absolute inset-0 h-full w-full object-cover" /> : null}
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(28,25,23,0.86),rgba(28,25,23,0.50)_52%,rgba(28,25,23,0.28)),linear-gradient(0deg,rgba(28,25,23,0.94),rgba(28,25,23,0.36)_58%,rgba(28,25,23,0.18))]" />
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[linear-gradient(0deg,rgba(28,25,23,0.96),rgba(28,25,23,0))]" />
-          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 pb-10 md:px-6 md:pb-16">
+          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 pb-8 md:px-6 md:pb-12">
             <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-200/80">
               <span>{categoryLabels[campaign.category] ?? campaign.category}</span>
               {campaign.is_verified ? <span className="text-emerald-200">проверено</span> : null}
@@ -360,11 +360,11 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
 
       <section className="mx-auto max-w-5xl px-0 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">осталось собрать</p>
-        <p className="mt-4 text-5xl font-semibold tracking-[-0.04em] text-stone-950 md:text-7xl">{formatMoney(remainingAmount)}</p>
-        <div className="mx-auto mt-8 max-w-4xl">
+        <p className="mt-3 text-5xl font-semibold tracking-[-0.04em] text-stone-950 md:text-7xl">{formatMoney(remainingAmount)}</p>
+        <div className="mx-auto mt-5 max-w-4xl">
           <ProgressBar value={campaign.progress_percentage} className="h-5" />
         </div>
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-stone-500">
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-stone-500">
           <span>{formatMoney(campaign.current_amount)} уже собрано</span>
           <span>{campaign.contributors_count} помогли</span>
           <span>{campaign.progress_percentage}% цели</span>
@@ -400,6 +400,9 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
             <h2 className="mt-4 text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
               Каждый вклад приближает человека к цели.
             </h2>
+            <p className="mt-5 max-w-md text-base leading-7 text-stone-300">
+              Вы уже знаете эту историю. Остался последний шаг, который может сдвинуть её вперед.
+            </p>
           </div>
 
           {canDonate ? (
@@ -463,11 +466,15 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
         campaignStatus={campaign.status}
         updates={updates}
         isOwner={isOwner}
+        isSubscribed={isSubscribed}
+        isSubscriptionLoading={isSubscriptionLoading}
+        subscriptionMessage={subscriptionMessage}
         title={updateTitle}
         content={updateContent}
         photos={updatePhotos}
         isPublishing={isPublishingUpdate}
         message={updateMessage}
+        onSubscriptionChange={handleSubscriptionChange}
         onTitleChange={setUpdateTitle}
         onContentChange={setUpdateContent}
         onPhotosChange={setUpdatePhotos}
@@ -484,25 +491,6 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
       />
 
       <section className="mx-auto max-w-3xl border-t border-stone-200 pt-8">
-        {!isOwner ? (
-          <div className="mb-8">
-            <p className="text-sm font-semibold text-stone-950">
-              {isSubscribed ? "Вы следите за этой историей" : "Получайте новости этой истории"}
-            </p>
-            <p className="mt-1 text-sm leading-6 text-stone-600">
-              {isSubscribed ? "Мы сообщим об обновлениях, новых фотографиях и завершении истории." : "Подпишитесь, чтобы не пропустить обновления автора."}
-            </p>
-            <button
-              className={`mt-3 rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-60 ${isSubscribed ? "bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50" : "bg-emerald-700 text-white hover:bg-emerald-800"}`}
-              disabled={isSubscriptionLoading}
-              onClick={handleSubscriptionChange}
-              type="button"
-            >
-              {isSubscriptionLoading ? "Сохраняем..." : isSubscribed ? "Не следить" : "Следить за историей"}
-            </button>
-            {subscriptionMessage ? <p className="mt-2 text-xs leading-5 text-stone-600">{subscriptionMessage}</p> : null}
-          </div>
-        ) : null}
         <AuthorReputationCard campaign={campaign} reputation={authorReputation} />
       </section>
 
@@ -745,14 +733,20 @@ function AuthorReputationCard({ campaign, reputation }: { campaign: CampaignDeta
   return (
     <section>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">автор</p>
-      <h2 className="mt-2 text-xl font-semibold tracking-[-0.02em] text-stone-950">{campaign.owner?.username ?? "Автор истории"}</h2>
-      <div className="mt-4 space-y-2 text-sm">
-        <AuthorReputationRow label="Историй создано" value={reputation ? String(reputation.campaigns_created) : "—"} />
-        <AuthorReputationRow label="Успешно завершено" value={reputation ? String(reputation.campaigns_completed) : "—"} />
-        <AuthorReputationRow label="Всего собрано" value={reputation ? formatMoney(reputation.total_raised_amount) : "—"} />
+      <div className="mt-3 flex items-start gap-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-stone-950 text-sm font-semibold text-white">
+          {(campaign.owner?.username ?? "А").slice(0, 1).toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <h2 className="truncate text-2xl font-semibold tracking-[-0.02em] text-stone-950">{campaign.owner?.username ?? "Автор истории"}</h2>
+          <div className="mt-2 space-y-1 text-sm leading-6 text-stone-600">
+            <p>{reputation ? `Создал ${reputation.campaigns_created} ${pluralizeStories(reputation.campaigns_created)}` : "Рассказывает свою историю на TipForTea"}</p>
+            <p>{reputation ? `Помог собрать ${formatMoney(reputation.total_raised_amount)}` : "Статистика автора скоро появится"}</p>
+          </div>
+        </div>
       </div>
       {campaign.owner?.username ? (
-        <Link href={`/u/${campaign.owner.username}`} className="mt-4 inline-flex rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-emerald-50 hover:text-emerald-800">
+        <Link href={`/u/${campaign.owner.username}`} className="mt-5 inline-flex rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-emerald-50 hover:text-emerald-800">
           Посмотреть профиль автора
         </Link>
       ) : null}
@@ -760,13 +754,12 @@ function AuthorReputationCard({ campaign, reputation }: { campaign: CampaignDeta
   );
 }
 
-function AuthorReputationRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-4 border-b border-stone-100 pb-3 last:border-0 last:pb-0">
-      <span className="text-stone-500">{label}</span>
-      <strong className="text-right text-stone-950">{value}</strong>
-    </div>
-  );
+function pluralizeStories(value: number) {
+  const mod10 = value % 10;
+  const mod100 = value % 100;
+  if (mod10 === 1 && mod100 !== 11) return "историю";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "истории";
+  return "историй";
 }
 
 async function uploadPhotos(photos: PendingPhoto[]) {
@@ -781,11 +774,15 @@ function CampaignUpdatesSection({
   campaignStatus,
   updates,
   isOwner,
+  isSubscribed,
+  isSubscriptionLoading,
+  subscriptionMessage,
   title,
   content,
   photos,
   isPublishing,
   message,
+  onSubscriptionChange,
   onTitleChange,
   onContentChange,
   onPhotosChange,
@@ -794,11 +791,15 @@ function CampaignUpdatesSection({
   campaignStatus: CampaignDetail["status"];
   updates: CampaignUpdateItem[];
   isOwner: boolean;
+  isSubscribed: boolean;
+  isSubscriptionLoading: boolean;
+  subscriptionMessage: string | null;
   title: string;
   content: string;
   photos: PendingPhoto[];
   isPublishing: boolean;
   message: string | null;
+  onSubscriptionChange: () => void;
   onTitleChange: (value: string) => void;
   onContentChange: (value: string) => void;
   onPhotosChange: (value: PendingPhoto[]) => void;
@@ -878,6 +879,26 @@ function CampaignUpdatesSection({
           </div>
         )}
       </div>
+
+      {!isOwner ? (
+        <div className="mt-8 border-t border-stone-200 pt-6">
+          <p className="font-semibold text-stone-950">
+            {isSubscribed ? "Вы следите за этой историей" : "Получайте новые обновления этой истории"}
+          </p>
+          <p className="mt-1 text-sm leading-6 text-stone-600">
+            {isSubscribed ? "Мы сообщим об обновлениях, новых фотографиях и завершении истории." : "Подпишитесь, чтобы не пропустить, что расскажет автор."}
+          </p>
+          <button
+            className={`mt-4 rounded-full px-5 py-2.5 text-sm font-semibold transition disabled:opacity-60 ${isSubscribed ? "bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50" : "bg-emerald-700 text-white hover:bg-emerald-800"}`}
+            disabled={isSubscriptionLoading}
+            onClick={onSubscriptionChange}
+            type="button"
+          >
+            {isSubscriptionLoading ? "Сохраняем..." : isSubscribed ? "Не следить" : "Следить"}
+          </button>
+          {subscriptionMessage ? <p className="mt-2 text-xs leading-5 text-stone-600">{subscriptionMessage}</p> : null}
+        </div>
+      ) : null}
     </section>
   );
 }
