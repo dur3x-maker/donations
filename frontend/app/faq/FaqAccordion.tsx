@@ -12,26 +12,16 @@ type FaqAccordionProps = {
 };
 
 export function FaqAccordion({ items }: FaqAccordionProps) {
-  const [openItems, setOpenItems] = useState<Set<number>>(() => new Set([0]));
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const toggleItem = (index: number) => {
-    setOpenItems((current) => {
-      const next = new Set(current);
-
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-
-      return next;
-    });
+    setOpenIndex((current) => (current === index ? null : index));
   };
 
   return (
     <div className="space-y-3">
       {items.map((item, index) => {
-        const isOpen = openItems.has(index);
+        const isOpen = openIndex === index;
         const panelId = `faq-panel-${index}`;
         const buttonId = `faq-button-${index}`;
 
