@@ -5,6 +5,18 @@ import { formatMoney } from "@/lib/format";
 export default async function PublicProfilePage({ params }: { params: { username: string } }) {
   const profile = await fetchPublicProfile(params.username);
   const displayName = fullName(profile.first_name, profile.last_name) || profile.username;
+  const authorReputation = profile.author_reputation;
+  const totalRaisedAmount = Number(authorReputation.total_raised_amount);
+  const hasRaisedAmount = totalRaisedAmount > 0;
+  const authorFacts = [
+    `Создал ${formatCount(authorReputation.campaigns_created, ["историю", "истории", "историй"])}`,
+    authorReputation.campaigns_completed > 0
+      ? `Довёл до результата ${formatCount(authorReputation.campaigns_completed, ["историю", "истории", "историй"])}`
+      : "Завершённые истории ещё впереди",
+    authorReputation.campaigns_with_reports > 0
+      ? `Опубликовал ${formatCount(authorReputation.campaigns_with_reports, ["итоговый отчёт", "итоговых отчёта", "итоговых отчётов"])}`
+      : "Итоговых отчётов пока нет",
+  ];
 
   return (
     <section className="space-y-8">
@@ -56,15 +68,34 @@ export default async function PublicProfilePage({ params }: { params: { username
         )}
       </section>
 
-      <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
-        <p className="text-sm uppercase tracking-[0.16em] text-stone-400">репутация автора</p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-stone-950">Факты об историях автора</h2>
-        <div className="mt-5 grid gap-3 md:grid-cols-5">
-          <AuthorFact label="Историй создано" value={String(profile.author_reputation.campaigns_created)} />
-          <AuthorFact label="Успешно завершено" value={String(profile.author_reputation.campaigns_completed)} />
-          <AuthorFact label="Всего собрано" value={formatMoney(profile.author_reputation.total_raised_amount)} />
-          <AuthorFact label="Отчёты опубликованы" value={String(profile.author_reputation.campaigns_with_reports)} />
-          <AuthorFact label="Без отчёта" value={String(profile.author_reputation.campaigns_without_reports)} />
+      <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
+        <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
+          <div className="p-5 md:p-7">
+            <p className="text-sm uppercase tracking-[0.16em] text-stone-400">репутация автора</p>
+            <h2 className="mt-2 max-w-2xl text-2xl font-semibold tracking-[-0.02em] text-stone-950">Факты об историях автора</h2>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-stone-700">
+              {hasRaisedAmount ? "За всё время благодаря этому автору удалось собрать" : "Этот автор только начинает собирать истории помощи"}
+            </p>
+            {hasRaisedAmount ? (
+              <p className="mt-3 text-4xl font-semibold tracking-[-0.04em] text-stone-950 md:text-6xl">{formatMoney(authorReputation.total_raised_amount)}</p>
+            ) : (
+              <p className="mt-3 max-w-xl text-base leading-7 text-stone-600">Первые собранные суммы появятся здесь, когда его истории получат поддержку.</p>
+            )}
+          </div>
+          <div className="border-t border-stone-200 bg-stone-50/80 p-5 md:border-l md:border-t-0 md:p-7">
+            <div className="space-y-4">
+              {authorFacts.map((fact) => (
+                <p key={fact} className="border-b border-stone-200 pb-4 text-base leading-7 text-stone-800 last:border-0 last:pb-0">
+                  {fact}
+                </p>
+              ))}
+              {authorReputation.campaigns_without_reports > 0 ? (
+                <p className="text-sm leading-6 text-stone-500">
+                  Без итогового отчёта сейчас {formatCount(authorReputation.campaigns_without_reports, ["история", "истории", "историй"])}.
+                </p>
+              ) : null}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -116,15 +147,6 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function AuthorFact({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[20px] bg-stone-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-400">{label}</p>
-      <p className="mt-2 text-xl font-semibold text-stone-950">{value}</p>
-    </div>
-  );
-}
-
 function fullName(firstName?: string | null, lastName?: string | null) {
   return [firstName, lastName].filter(Boolean).join(" ").trim();
 }
@@ -135,6 +157,14 @@ function initialsFor(name: string, username: string) {
 
 function formatProfileMonth(value: string) {
   return new Intl.DateTimeFormat("ru-RU", { month: "long", year: "numeric" }).format(new Date(value));
+}
+
+function formatCount(value: number, forms: [string, string, string]) {
+  const mod10 = value % 10;
+  const mod100 = value % 100;
+  const form = mod10 === 1 && mod100 !== 11 ? forms[0] : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? forms[1] : forms[2];
+
+  return `${value} ${form}`;
 }
 
 function achievementLabel(value: string) {
