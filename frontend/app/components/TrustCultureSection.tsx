@@ -30,24 +30,24 @@ const workSteps = [
 
 export function TrustCultureSection() {
   return (
-    <div className="space-y-8">
-      <section className="rounded-[22px] bg-stone-950 p-6 text-white shadow-[0_22px_70px_rgba(28,25,23,0.18)] md:p-8 lg:p-10">
-        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-          <div className="max-w-2xl">
+    <div className="space-y-10">
+      <section className="relative left-1/2 w-screen -translate-x-1/2 bg-stone-950 px-4 py-14 text-white shadow-[0_28px_90px_rgba(28,25,23,0.22)] md:px-6 md:py-16 lg:py-20">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+          <div className="max-w-4xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">почему можно доверять</p>
-            <h2 className="mt-3 text-3xl font-semibold leading-[1.08] tracking-tight md:text-5xl">
-              Не обещания. Следы реальной помощи.
+            <h2 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-tight md:text-6xl lg:text-7xl">
+              Доверие появляется, когда помощь можно проследить.
             </h2>
-            <p className="mt-5 max-w-xl text-base leading-7 text-stone-300">
-              TipForTea показывает не витрину сервиса, а путь денег: от истории к прогрессу и результату.
+            <p className="mt-6 max-w-2xl text-base leading-7 text-stone-300 md:text-lg md:leading-8">
+              TipForTea показывает путь истории: зачем нужен сбор, как движется сумма и чем все закончилось.
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 lg:gap-4">
+          <div className="space-y-5 border-l border-white/12 pl-5">
             {trustReasons.map((step) => (
-              <div key={step.title} className="rounded-[18px] border border-white/10 bg-white/[0.05] p-5">
+              <div key={step.title}>
                 <h3 className="text-lg font-semibold text-white">{step.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-stone-300">{step.text}</p>
+                <p className="mt-1 text-sm leading-6 text-stone-300">{step.text}</p>
               </div>
             ))}
           </div>
@@ -55,21 +55,22 @@ export function TrustCultureSection() {
       </section>
 
       <section aria-labelledby="how-it-works-title">
-        <div className="mb-5 max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">как работает</p>
-          <h2 id="how-it-works-title" className="mt-2 text-3xl font-semibold leading-tight text-stone-950 md:text-4xl">
-            Помощь без лишних шагов
-          </h2>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-8 lg:grid-cols-[0.55fr_1.45fr] lg:items-start">
+          <div className="max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">как работает</p>
+            <h2 id="how-it-works-title" className="mt-2 text-3xl font-semibold leading-tight text-stone-950 md:text-4xl">
+              Три простых шага, без лишней механики
+            </h2>
+          </div>
+          <div className="grid gap-0 divide-y divide-stone-200 border-y border-stone-200 md:grid-cols-3 md:divide-x md:divide-y-0">
           {workSteps.map((step, index) => (
-            <article key={step.title} className="rounded-[18px] border border-stone-200 bg-white/75 p-5 shadow-sm">
+            <article key={step.title} className="py-5 md:px-5 md:py-6">
               <span className="text-sm font-semibold text-emerald-800">0{index + 1}</span>
               <h3 className="mt-3 text-xl font-semibold text-stone-950">{step.title}</h3>
               <p className="mt-2 text-sm leading-6 text-stone-600">{step.text}</p>
             </article>
           ))}
+          </div>
         </div>
       </section>
     </div>

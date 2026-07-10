@@ -104,7 +104,7 @@ export function LivingGoalsCarousel({ campaigns: initialCampaigns }: LivingGoals
   return (
     <div
       ref={trackRef}
-      className={`-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain px-4 pb-4 pt-1 touch-auto scrollbar-none [-webkit-overflow-scrolling:touch] md:-mx-6 md:px-6 ${
+      className={`-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain px-4 pb-4 pt-1 touch-auto scrollbar-none [-webkit-overflow-scrolling:touch] md:-mx-6 md:px-6 lg:mx-0 lg:grid lg:auto-rows-[220px] lg:grid-cols-4 lg:overflow-visible lg:px-0 lg:pb-0 ${
         isDragging ? "cursor-grabbing select-none scroll-auto" : "cursor-grab scroll-smooth"
       }`}
       onPointerDown={handlePointerDown}
@@ -123,13 +123,13 @@ export function LivingGoalsCarousel({ campaigns: initialCampaigns }: LivingGoals
         }
       }}
     >
-      {campaigns.map((campaign) => (
-        <LivingGoalCard key={campaign.id} campaign={campaign} />
+      {campaigns.map((campaign, index) => (
+        <LivingGoalCard key={campaign.id} campaign={campaign} variant={getStoryVariant(index)} />
       ))}
 
       <Link
         href="/campaigns"
-        className="flex min-h-[410px] w-[82vw] max-w-[350px] shrink-0 snap-start flex-col justify-between rounded-[20px] border border-stone-900 bg-stone-950 p-6 text-white shadow-[0_18px_55px_rgba(28,25,23,0.14)] outline-none transition hover:bg-emerald-900 focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[350px]"
+        className="flex min-h-[410px] w-[82vw] max-w-[350px] shrink-0 snap-start flex-col justify-between rounded-[20px] border border-stone-900 bg-stone-950 p-6 text-white shadow-[0_18px_55px_rgba(28,25,23,0.14)] outline-none transition hover:bg-emerald-900 focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[350px] lg:col-span-2 lg:min-h-0 lg:w-auto lg:max-w-none"
       >
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-200">еще истории</p>
@@ -153,30 +153,47 @@ function patchCampaign(campaign: CampaignListItem, event: CampaignUpdatedEvent) 
   };
 }
 
-function LivingGoalCard({ campaign }: { campaign: CampaignListItem }) {
+type StoryVariant = "large" | "tall" | "wide" | "compact";
+
+function getStoryVariant(index: number): StoryVariant {
+  if (index === 0) return "large";
+  if (index === 1) return "tall";
+  if (index === 4) return "wide";
+  return "compact";
+}
+
+function LivingGoalCard({ campaign, variant }: { campaign: CampaignListItem; variant: StoryVariant }) {
   const left = amountLeft(campaign.current_amount, campaign.target_amount);
+  const variantClass = {
+    large: "lg:col-span-2 lg:row-span-2",
+    tall: "lg:row-span-2",
+    wide: "lg:col-span-2",
+    compact: "",
+  }[variant];
+  const imageClass = variant === "large" || variant === "tall" ? "lg:aspect-auto lg:min-h-0 lg:flex-1" : "";
+  const titleClass = variant === "large" ? "lg:text-3xl" : variant === "tall" ? "lg:text-2xl" : "";
 
   return (
     <Link
       href={`/campaigns/${campaign.id}`}
-      className="group block w-[82vw] max-w-[380px] shrink-0 snap-start overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-[0_16px_45px_rgba(28,25,23,0.07)] outline-none transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_24px_60px_rgba(28,25,23,0.11)] focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[380px]"
+      className={`group block w-[82vw] max-w-[380px] shrink-0 snap-start overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-[0_16px_45px_rgba(28,25,23,0.07)] outline-none transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_24px_60px_rgba(28,25,23,0.11)] focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[380px] lg:flex lg:h-full lg:w-auto lg:max-w-none lg:flex-col ${variantClass}`}
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
+      <div className={`relative aspect-[16/10] overflow-hidden bg-stone-100 ${imageClass}`}>
         {campaign.cover_image_url ? (
           <img src={campaign.cover_image_url} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]" draggable={false} />
         ) : (
-          <div className="h-full w-full bg-[#e9ded1]" />
+          <div className="h-full w-full bg-[linear-gradient(135deg,#e9ded1_0%,#f8fafc_48%,#bbf7d0_100%)]" />
         )}
         <div className="absolute left-3 top-3 rounded-full bg-white/92 px-3 py-1 text-xs font-medium text-stone-700 shadow-sm">
           {categoryLabels[campaign.category] ?? campaign.category}
         </div>
       </div>
 
-      <div className="p-5">
-        <h3 className="text-xl font-semibold leading-tight text-stone-950">{campaign.title}</h3>
+      <div className="p-5 lg:flex lg:min-h-0 lg:flex-col">
+        <h3 className={`text-xl font-semibold leading-tight text-stone-950 ${titleClass}`}>{campaign.title}</h3>
         <p className="mt-3 line-clamp-2 text-sm leading-6 text-stone-600">{campaign.description_preview}</p>
 
-        <div className="mt-6">
+        <div className="mt-6 lg:mt-auto">
           <div className="mb-3 flex items-end justify-between gap-4">
             <div>
               <p className="text-xs text-stone-400">собрано</p>
