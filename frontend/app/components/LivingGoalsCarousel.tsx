@@ -163,6 +163,10 @@ function getStoryVariant(index: number): StoryVariant {
 }
 
 function LivingGoalCard({ campaign, variant }: { campaign: CampaignListItem; variant: StoryVariant }) {
+  if (variant === "large") {
+    return <MainStoryCard campaign={campaign} />;
+  }
+
   const left = amountLeft(campaign.current_amount, campaign.target_amount);
   const variantClass = {
     large: "lg:col-span-2 lg:row-span-2",
@@ -170,8 +174,8 @@ function LivingGoalCard({ campaign, variant }: { campaign: CampaignListItem; var
     wide: "lg:col-span-2",
     compact: "",
   }[variant];
-  const imageClass = variant === "large" || variant === "tall" ? "lg:aspect-auto lg:min-h-0 lg:flex-1" : "";
-  const titleClass = variant === "large" ? "lg:text-3xl" : variant === "tall" ? "lg:text-2xl" : "";
+  const imageClass = variant === "tall" ? "lg:aspect-auto lg:min-h-0 lg:flex-1" : "";
+  const titleClass = variant === "tall" ? "lg:text-2xl" : "";
 
   return (
     <Link
@@ -206,6 +210,51 @@ function LivingGoalCard({ campaign, variant }: { campaign: CampaignListItem; var
             <span className="text-stone-500">{campaign.progress_percentage}% цели</span>
             <span className="font-semibold text-stone-950 group-hover:text-emerald-800">История →</span>
           </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function MainStoryCard({ campaign }: { campaign: CampaignListItem }) {
+  const left = amountLeft(campaign.current_amount, campaign.target_amount);
+
+  return (
+    <Link
+      href={`/campaigns/${campaign.id}`}
+      className="group relative block min-h-[460px] w-[86vw] max-w-[420px] shrink-0 snap-start overflow-hidden rounded-[24px] bg-stone-950 text-white shadow-[0_24px_70px_rgba(28,25,23,0.18)] outline-none transition hover:-translate-y-0.5 hover:shadow-[0_32px_80px_rgba(28,25,23,0.24)] focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[420px] lg:col-span-2 lg:row-span-2 lg:h-full lg:w-auto lg:max-w-none"
+    >
+      {campaign.cover_image_url ? (
+        <img src={campaign.cover_image_url} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]" draggable={false} />
+      ) : (
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,#292524_0%,#1c1917_44%,#065f46_100%)]" />
+      )}
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(28,25,23,0.05)_0%,rgba(28,25,23,0.36)_42%,rgba(28,25,23,0.92)_100%)]" />
+      <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-stone-900 shadow-sm">
+        главная история
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 p-5 md:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-200">
+          {categoryLabels[campaign.category] ?? campaign.category}
+        </p>
+        <h3 className="mt-3 max-w-xl text-3xl font-semibold leading-tight text-white md:text-4xl">{campaign.title}</h3>
+        <p className="mt-3 line-clamp-2 max-w-lg text-sm leading-6 text-stone-200">{campaign.description_preview}</p>
+
+        <div className="mt-6 rounded-[18px] border border-white/12 bg-white/10 p-4 backdrop-blur">
+          <div className="mb-3 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs text-stone-300">собрано</p>
+              <p className="text-2xl font-semibold text-white">{formatMoney(campaign.current_amount)}</p>
+            </div>
+            <p className="max-w-28 text-right text-sm leading-5 text-stone-300">осталось {formatMoney(left)}</p>
+          </div>
+          <ProgressBar value={campaign.progress_percentage} />
+        </div>
+
+        <div className="mt-5 flex items-center justify-between gap-3 text-sm">
+          <span className="text-stone-300">{campaign.progress_percentage}% цели</span>
+          <span className="font-semibold text-emerald-200 group-hover:text-white">Открыть историю →</span>
         </div>
       </div>
     </Link>

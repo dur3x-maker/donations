@@ -114,10 +114,15 @@ function EmptyFeaturedCampaign() {
 
 function StoryPlaceholderVisual() {
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(135deg,#292524_0%,#1c1917_42%,#064e3b_100%)]">
-      <div className="absolute inset-x-6 top-6 h-28 rounded-[28px] border border-white/10 bg-[linear-gradient(90deg,rgba(255,255,255,0.12),rgba(255,255,255,0.02))] md:inset-x-8 md:top-8 md:h-36" />
-      <div className="absolute left-6 top-40 h-px w-28 bg-emerald-200/40 md:left-8 md:top-52" />
-      <div className="absolute bottom-0 left-0 right-0 h-56 bg-[linear-gradient(0deg,rgba(6,78,59,0.44),rgba(6,78,59,0))]" />
+    <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(135deg,#1c1917_0%,#292524_38%,#063f33_100%)]">
+      <div className="absolute inset-x-6 top-6 h-28 rounded-[28px] border border-white/10 bg-[linear-gradient(110deg,rgba(255,255,255,0.16),rgba(255,255,255,0.03)_62%,rgba(16,185,129,0.16))] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] md:inset-x-8 md:top-8 md:h-36" />
+      <div className="absolute left-8 right-8 top-44 grid gap-3 md:top-56">
+        <div className="h-px w-2/5 bg-emerald-200/50" />
+        <div className="h-px w-3/5 bg-white/14" />
+        <div className="h-px w-1/4 bg-white/18" />
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 h-64 bg-[linear-gradient(0deg,rgba(6,78,59,0.54),rgba(6,78,59,0))]" />
+      <div className="absolute bottom-8 left-6 right-6 h-20 rounded-[24px] border border-white/10 bg-white/[0.045] md:left-8 md:right-8" />
     </div>
   );
 }
