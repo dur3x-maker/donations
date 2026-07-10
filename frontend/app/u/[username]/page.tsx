@@ -17,6 +17,13 @@ export default async function PublicProfilePage({ params }: { params: { username
       ? `Опубликовал ${formatCount(authorReputation.campaigns_with_reports, ["итоговый отчёт", "итоговых отчёта", "итоговых отчётов"])}`
       : "Итоговых отчётов пока нет",
   ];
+  const participationFacts = [
+    `Поддержал ${formatCount(profile.supported_campaigns_count, ["историю", "истории", "историй"])} других участников`,
+    Number(profile.total_donated_amount) > 0 ? `Внёс в сборы ${formatMoney(profile.total_donated_amount)}` : "Первый личный вклад ещё впереди",
+    profile.completed_campaigns_count > 0
+      ? `Участвовал в ${formatCount(profile.completed_campaigns_count, ["завершённой истории", "завершённых историях", "завершённых историях"])}`
+      : "Закрытые истории с его участием ещё впереди",
+  ];
 
   return (
     <section className="space-y-8">
@@ -41,32 +48,6 @@ export default async function PublicProfilePage({ params }: { params: { username
           </div>
         </div>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Поддержано" value={String(profile.supported_campaigns_count)} />
-        <StatCard label="Внесено" value={formatMoney(profile.total_donated_amount)} />
-        <StatCard label="Закрыто" value={String(profile.completed_campaigns_count)} />
-      </div>
-
-      <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-sm uppercase tracking-[0.16em] text-stone-400">отметки</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-stone-950">{profile.achievements_count} получено</h2>
-          </div>
-        </div>
-        {profile.achievements.length ? (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {profile.achievements.map((achievement) => (
-              <span key={achievement} className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-100">
-                {achievementLabel(achievement)}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-4 text-sm leading-6 text-stone-600">Пока без отметок. Первый вклад обычно самый тёплый.</p>
-        )}
-      </section>
 
       <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
         <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
@@ -95,8 +76,38 @@ export default async function PublicProfilePage({ params }: { params: { username
                 </p>
               ) : null}
             </div>
+            <div className="mt-6 border-t border-stone-200 pt-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-400">участие в сообществе</p>
+              <div className="mt-4 space-y-3">
+                {participationFacts.map((fact) => (
+                  <p key={fact} className="text-sm leading-6 text-stone-600">
+                    {fact}
+                  </p>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
+      </section>
+
+      <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm uppercase tracking-[0.16em] text-stone-400">достижения</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-stone-950">{profile.achievements_count} получено</h2>
+          </div>
+        </div>
+        {profile.achievements.length ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {profile.achievements.map((achievement) => (
+              <span key={achievement} className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-100">
+                {achievementLabel(achievement)}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm leading-6 text-stone-600">Пока без достижений. Первый вклад обычно самый тёплый.</p>
+        )}
       </section>
 
       <section>
@@ -134,15 +145,6 @@ function ProfileAvatar({ name, username, avatarUrl }: { name: string; username: 
       className="flex h-28 w-28 items-center justify-center rounded-full bg-[linear-gradient(135deg,#bbf7d0,#6ee7b7_45%,#fef3c7)] text-4xl font-semibold text-stone-950 shadow-[0_18px_50px_rgba(0,0,0,0.22)] ring-4 ring-white/15 md:h-36 md:w-36 md:text-5xl"
     >
       {initialsFor(name, username)}
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
-      <p className="text-sm uppercase tracking-[0.16em] text-stone-400">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-stone-950">{value}</p>
     </div>
   );
 }
