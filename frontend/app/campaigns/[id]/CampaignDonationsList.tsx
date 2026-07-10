@@ -16,13 +16,13 @@ export function CampaignDonationsList({
   onLoadMore: () => void;
 }) {
   return (
-    <section className="rounded-[30px] border border-stone-200 bg-stone-50/75 p-5 md:p-6">
+    <section className="mx-auto max-w-3xl">
       <div>
         <h2 className="text-2xl font-semibold tracking-[-0.02em] text-stone-950">Последние участники</h2>
         <p className="mt-1 text-sm text-stone-500">Свежие подтверждённые вклады — от новых к более ранним.</p>
       </div>
 
-      <div className="mt-5 space-y-4">
+      <div className="mt-5 divide-y divide-stone-200 border-y border-stone-200">
         {donations.length ? (
           donations.map((donation) => (
             <DonationRow key={donation.id} donation={donation} isNew={newDonationId === donation.id} />
@@ -53,13 +53,13 @@ function DonationRow({ donation, isNew }: { donation: RecentDonation; isNew: boo
 
   return (
     <div
-      className={`rounded-[20px] border border-stone-200 bg-white p-4 shadow-sm transition duration-500 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md ${
-        isNew ? "opacity-100 ring-4 ring-emerald-100" : "opacity-95"
+      className={`py-4 transition duration-500 hover:bg-white/60 ${
+        isNew ? "rounded-2xl bg-emerald-50 px-3 ring-4 ring-emerald-100" : ""
       }`}
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-100">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-100">
             {isAnonymous ? "А" : donation.username.slice(0, 1).toUpperCase()}
           </div>
           <div className="min-w-0">
@@ -73,7 +73,7 @@ function DonationRow({ donation, isNew }: { donation: RecentDonation; isNew: boo
             <p className="mt-1 text-sm text-stone-500">{relativeTime(donation.created_at)}</p>
           </div>
         </div>
-        <p className="shrink-0 text-lg font-semibold text-emerald-700">{formatMoney(donation.amount)}</p>
+        <p className="shrink-0 font-semibold text-emerald-700">{formatMoney(donation.amount)}</p>
       </div>
     </div>
   );

@@ -330,22 +330,21 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start">
-      <section className="overflow-hidden rounded-[34px] border border-stone-200 bg-white shadow-[0_24px_90px_rgba(28,25,23,0.10)]">
-        <div className="relative min-h-[390px] overflow-hidden bg-stone-100 md:aspect-[16/8.6] md:min-h-0">
+    <div className="space-y-16 md:space-y-24">
+      <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-stone-950">
+        <div className="relative min-h-[calc(100vh-84px)] overflow-hidden">
           {campaign.cover_image_url ? <img src={campaign.cover_image_url} alt="" className="absolute inset-0 h-full w-full object-cover" /> : null}
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(28,25,23,0.82),rgba(28,25,23,0.42)_52%,rgba(28,25,23,0.16)),linear-gradient(0deg,rgba(28,25,23,0.92),rgba(28,25,23,0.38)_58%,rgba(28,25,23,0.10))]" />
-          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[linear-gradient(0deg,rgba(28,25,23,0.92),rgba(28,25,23,0))]" />
-          <div className="absolute inset-x-0 bottom-0 p-5 md:p-9">
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(28,25,23,0.86),rgba(28,25,23,0.50)_52%,rgba(28,25,23,0.28)),linear-gradient(0deg,rgba(28,25,23,0.94),rgba(28,25,23,0.36)_58%,rgba(28,25,23,0.18))]" />
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[linear-gradient(0deg,rgba(28,25,23,0.96),rgba(28,25,23,0))]" />
+          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 pb-10 md:px-6 md:pb-16">
             <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-200/80">
               <span>{categoryLabels[campaign.category] ?? campaign.category}</span>
               {campaign.is_verified ? <span className="text-emerald-200">проверено</span> : null}
-              <span>{formatDate(campaign.created_at)}</span>
             </div>
-            <h1 className="max-w-4xl text-4xl font-semibold leading-[1.02] tracking-[-0.035em] text-white drop-shadow-[0_4px_22px_rgba(0,0,0,0.55)] md:text-7xl">
+            <h1 className="max-w-5xl text-5xl font-semibold leading-[0.98] tracking-[-0.045em] text-white drop-shadow-[0_5px_26px_rgba(0,0,0,0.58)] md:text-7xl lg:text-8xl">
               {campaign.title}
             </h1>
-            <p className="mt-5 text-sm text-stone-200/85">
+            <p className="mt-6 text-sm text-stone-200/85">
               История от{" "}
               {campaign.owner?.username ? (
                 <Link href={`/u/${campaign.owner.username}`} className="font-semibold text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
@@ -357,145 +356,136 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
             </p>
           </div>
         </div>
+      </section>
 
-        <div className="space-y-10 p-5 md:p-8">
-          {campaign.status !== "ACTIVE" && Number(campaign.current_amount) >= Number(campaign.target_amount) ? (
-            <section className="rounded-[28px] border border-amber-200 bg-amber-50 p-5 shadow-[0_18px_55px_rgba(146,64,14,0.10)] md:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">следующий шаг</p>
-              <h2 className="mt-2 text-2xl font-semibold text-stone-950">История достигла цели.</h2>
-              <p className="mt-2 max-w-2xl leading-7 text-stone-700">
-                Средства будут доступны для вывода через банк-партнёр.
-              </p>
-              {isOwner ? (
-                <div className="mt-4 flex flex-wrap gap-3">
-                  {campaign.status === "AWAITING_REPORT" ? <a href="#completion-report" className="inline-flex rounded-full bg-stone-950 px-5 py-3 font-semibold text-white hover:bg-emerald-800">Перейти к итоговому отчёту</a> : null}
-                  {withdrawalInfo?.available ? (
-                    <button className="rounded-full bg-emerald-700 px-5 py-3 font-semibold text-white transition hover:bg-emerald-800" onClick={() => setIsWithdrawalOpen(true)} type="button">
-                      Вывести средства
-                    </button>
-                  ) : null}
-                </div>
-              ) : null}
-            </section>
-          ) : null}
-          <section className="rounded-[30px] border border-stone-200 bg-stone-50/80 p-5 md:p-7">
-            <div className="mb-6 grid gap-5 md:grid-cols-[1.15fr_0.85fr] md:items-end">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">осталось собрать</p>
-                <p className="mt-2 text-4xl font-semibold tracking-[-0.03em] text-stone-950 md:text-5xl">{formatMoney(remainingAmount)}</p>
-                <p className="mt-3 text-sm leading-6 text-stone-500">Уже собрано {formatMoney(campaign.current_amount)} из {formatMoney(campaign.target_amount)}.</p>
-              </div>
-              <div className="text-left md:text-right">
-                <p className="text-sm text-stone-500">цель {formatMoney(campaign.target_amount)}</p>
-                <p className="mt-1 font-semibold text-emerald-700">{campaign.progress_percentage}% цели</p>
-                <p className="mt-1 text-sm text-stone-500">{campaign.contributors_count} участников</p>
-              </div>
-            </div>
-            <ProgressBar value={campaign.progress_percentage} className="h-4" />
-          </section>
-
-          <article className="mx-auto max-w-[68ch] whitespace-pre-wrap text-[17px] leading-9 text-stone-700 md:text-lg md:leading-9">{campaign.description}</article>
-
-          <FutureUseOfFundsSection items={[]} />
-
-          <StoryTrustPause />
-
-          <CompletionReportSection
-            campaign={campaign}
-            report={completionReport}
-            isOwner={isOwner}
-            gratitudeText={gratitudeText}
-            photos={completionPhotos}
-            isPublishing={isPublishingCompletion}
-            message={completionMessage}
-            onGratitudeChange={setGratitudeText}
-            onPhotosChange={setCompletionPhotos}
-            onSubmit={handleCompletionSubmit}
-          />
-
-          <CampaignUpdatesSection
-            campaignStatus={campaign.status}
-            updates={updates}
-            isOwner={isOwner}
-            title={updateTitle}
-            content={updateContent}
-            photos={updatePhotos}
-            isPublishing={isPublishingUpdate}
-            message={updateMessage}
-            onTitleChange={setUpdateTitle}
-            onContentChange={setUpdateContent}
-            onPhotosChange={setUpdatePhotos}
-            onSubmit={handleUpdateSubmit}
-          />
-
-          {wsMessage ? <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{wsMessage}</p> : null}
-          <CampaignDonationsList
-            donations={donations}
-            hasMore={hasMoreDonations}
-            isLoadingMore={isLoadingMoreDonations}
-            newDonationId={newDonationId}
-            onLoadMore={loadMoreDonations}
-          />
-
-          <ShareSection
-            shareMessage={shareMessage}
-            reportMessage={reportMessage}
-            onShare={handleShare}
-            onReport={() => setIsReportOpen(true)}
-          />
+      <section className="mx-auto max-w-5xl px-0 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">осталось собрать</p>
+        <p className="mt-4 text-5xl font-semibold tracking-[-0.04em] text-stone-950 md:text-7xl">{formatMoney(remainingAmount)}</p>
+        <div className="mx-auto mt-8 max-w-4xl">
+          <ProgressBar value={campaign.progress_percentage} className="h-5" />
+        </div>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-stone-500">
+          <span>{formatMoney(campaign.current_amount)} уже собрано</span>
+          <span>{campaign.contributors_count} помогли</span>
+          <span>{campaign.progress_percentage}% цели</span>
         </div>
       </section>
 
-      <aside className="space-y-4 lg:sticky lg:top-24">
-        {canDonate ? (
-          <form onSubmit={handleSubmit} className="space-y-5 rounded-[30px] border border-emerald-100 bg-white p-5 shadow-[0_28px_100px_rgba(28,25,23,0.16)]">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">поддержка</p>
-              <h2 className="mt-2 text-2xl font-semibold leading-tight tracking-[-0.02em] text-stone-950">Поддержать сбор</h2>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {quickAmounts.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setAmount(String(value))}
-                  className={`min-h-11 rounded-full px-3 py-2 text-sm font-semibold transition ${amount === String(value) ? "bg-stone-950 text-white" : "bg-stone-100 text-stone-700 hover:bg-stone-200"}`}
-                >
-                  {value}
+      {campaign.status !== "ACTIVE" && Number(campaign.current_amount) >= Number(campaign.target_amount) ? (
+        <section className="mx-auto max-w-3xl border-y border-amber-200 py-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">следующий шаг</p>
+          <h2 className="mt-2 text-2xl font-semibold text-stone-950">История достигла цели.</h2>
+          <p className="mt-2 max-w-2xl leading-7 text-stone-700">Средства будут доступны для вывода через банк-партнёр.</p>
+          {isOwner ? (
+            <div className="mt-4 flex flex-wrap gap-3">
+              {campaign.status === "AWAITING_REPORT" ? <a href="#completion-report" className="inline-flex rounded-full bg-stone-950 px-5 py-3 font-semibold text-white hover:bg-emerald-800">Перейти к итоговому отчёту</a> : null}
+              {withdrawalInfo?.available ? (
+                <button className="rounded-full bg-emerald-700 px-5 py-3 font-semibold text-white transition hover:bg-emerald-800" onClick={() => setIsWithdrawalOpen(true)} type="button">
+                  Вывести средства
                 </button>
-              ))}
+              ) : null}
             </div>
-            <label className="block text-sm font-semibold text-stone-700">
-              Сумма
-              <input
-                className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3.5 text-lg font-semibold outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
-                min={MIN_DONATION_AMOUNT}
-                step="0.01"
-                type="number"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-              />
-            </label>
-            {amount !== "" && Number.isFinite(amountNumber) && amountNumber < MIN_DONATION_AMOUNT ? (
-              <p className="text-sm text-rose-700">Минимальная сумма поддержки — 100 ₽.</p>
-            ) : null}
-            <button className="min-h-12 w-full rounded-full bg-emerald-700 px-5 py-3 font-semibold text-white shadow-lg shadow-emerald-800/15 transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-70" disabled={paymentState === "processing"} type="submit">
-              {paymentState === "processing" ? "Отправляем..." : "Поддержать"}
-            </button>
-            {message ? <p className="break-words text-sm text-stone-600">{message}</p> : null}
-          </form>
-        ) : (
-          <section className="rounded-[30px] border border-stone-200 bg-white p-5 shadow-[0_24px_90px_rgba(28,25,23,0.12)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">поддержка</p>
-            <h2 className="mt-2 text-2xl font-semibold leading-tight tracking-[-0.02em] text-stone-950">
-              {isCompleted ? "История завершена" : "Сбор достиг цели"}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-stone-500">{donationHint}</p>
-          </section>
-        )}
+          ) : null}
+        </section>
+      ) : null}
 
+      <article className="mx-auto max-w-[720px] whitespace-pre-wrap px-1 text-[18px] leading-9 text-stone-700 md:text-[20px] md:leading-10">{campaign.description}</article>
+
+      <FutureUseOfFundsSection items={[]} />
+
+      <section className="relative left-1/2 w-screen -translate-x-1/2 bg-stone-950 px-4 py-16 text-white md:px-6 md:py-20">
+        <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-[0.92fr_1.08fr] md:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">поддержать</p>
+            <h2 className="mt-4 text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
+              Каждый вклад приближает человека к цели.
+            </h2>
+          </div>
+
+          {canDonate ? (
+            <form onSubmit={handleSubmit} className="space-y-5 rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.18)] backdrop-blur md:p-6">
+              <div className="grid grid-cols-3 gap-2">
+                {quickAmounts.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setAmount(String(value))}
+                    className={`min-h-12 rounded-full px-3 py-2 text-sm font-semibold transition ${amount === String(value) ? "bg-white text-stone-950" : "bg-white/10 text-white hover:bg-white/16"}`}
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+              <label className="block text-sm font-semibold text-stone-200">
+                Своя сумма
+                <input
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-4 text-lg font-semibold text-stone-950 outline-none transition focus:border-emerald-300 focus:ring-4 focus:ring-emerald-300/20"
+                  min={MIN_DONATION_AMOUNT}
+                  step="0.01"
+                  type="number"
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                />
+              </label>
+              {amount !== "" && Number.isFinite(amountNumber) && amountNumber < MIN_DONATION_AMOUNT ? (
+                <p className="text-sm text-rose-200">Минимальная сумма поддержки — 100 ₽.</p>
+              ) : null}
+              <button className="min-h-14 w-full rounded-full bg-emerald-600 px-5 py-3 text-lg font-semibold text-white shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-70" disabled={paymentState === "processing"} type="submit">
+                {paymentState === "processing" ? "Отправляем..." : "Поддержать"}
+              </button>
+              {message ? <p className="break-words text-sm text-stone-200">{message}</p> : null}
+            </form>
+          ) : (
+            <section className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 md:p-6">
+              <h3 className="text-2xl font-semibold leading-tight tracking-[-0.02em] text-white">
+                {isCompleted ? "История завершена" : "Сбор достиг цели"}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-stone-300">{donationHint}</p>
+            </section>
+          )}
+        </div>
+      </section>
+
+      <CompletionReportSection
+        campaign={campaign}
+        report={completionReport}
+        isOwner={isOwner}
+        gratitudeText={gratitudeText}
+        photos={completionPhotos}
+        isPublishing={isPublishingCompletion}
+        message={completionMessage}
+        onGratitudeChange={setGratitudeText}
+        onPhotosChange={setCompletionPhotos}
+        onSubmit={handleCompletionSubmit}
+      />
+
+      <CampaignUpdatesSection
+        campaignStatus={campaign.status}
+        updates={updates}
+        isOwner={isOwner}
+        title={updateTitle}
+        content={updateContent}
+        photos={updatePhotos}
+        isPublishing={isPublishingUpdate}
+        message={updateMessage}
+        onTitleChange={setUpdateTitle}
+        onContentChange={setUpdateContent}
+        onPhotosChange={setUpdatePhotos}
+        onSubmit={handleUpdateSubmit}
+      />
+
+      {wsMessage ? <p className="mx-auto max-w-3xl rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{wsMessage}</p> : null}
+      <CampaignDonationsList
+        donations={donations}
+        hasMore={hasMoreDonations}
+        isLoadingMore={isLoadingMoreDonations}
+        newDonationId={newDonationId}
+        onLoadMore={loadMoreDonations}
+      />
+
+      <section className="mx-auto max-w-3xl border-t border-stone-200 pt-8">
         {!isOwner ? (
-          <section className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-4">
+          <div className="mb-8">
             <p className="text-sm font-semibold text-stone-950">
               {isSubscribed ? "Вы следите за этой историей" : "Получайте новости этой истории"}
             </p>
@@ -511,11 +501,17 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
               {isSubscriptionLoading ? "Сохраняем..." : isSubscribed ? "Не следить" : "Следить за историей"}
             </button>
             {subscriptionMessage ? <p className="mt-2 text-xs leading-5 text-stone-600">{subscriptionMessage}</p> : null}
-          </section>
+          </div>
         ) : null}
-
         <AuthorReputationCard campaign={campaign} reputation={authorReputation} />
-      </aside>
+      </section>
+
+      <ShareSection
+        shareMessage={shareMessage}
+        reportMessage={reportMessage}
+        onShare={handleShare}
+        onReport={() => setIsReportOpen(true)}
+      />
 
       {isReportOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/40 p-4 backdrop-blur-sm">
@@ -720,7 +716,7 @@ function ShareSection({
   onReport: () => void;
 }) {
   return (
-    <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-sm md:p-6">
+    <section className="mx-auto max-w-3xl border-t border-stone-200 pt-8">
       <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
         <div>
           <h2 className="text-2xl font-semibold tracking-[-0.02em] text-stone-950">Поделиться сбором</h2>
@@ -747,7 +743,7 @@ function ShareSection({
 
 function AuthorReputationCard({ campaign, reputation }: { campaign: CampaignDetail; reputation: AuthorReputation | null }) {
   return (
-    <section className="rounded-[24px] border border-stone-200 bg-white/80 p-4 shadow-sm">
+    <section>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">автор</p>
       <h2 className="mt-2 text-xl font-semibold tracking-[-0.02em] text-stone-950">{campaign.owner?.username ?? "Автор истории"}</h2>
       <div className="mt-4 space-y-2 text-sm">
@@ -810,8 +806,8 @@ function CampaignUpdatesSection({
 }) {
   const canPublishRegularUpdate = isOwner && campaignStatus === "ACTIVE";
   return (
-    <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-sm md:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <section className="mx-auto max-w-3xl">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200 pb-5">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">обновления</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-stone-950">Обновления</h2>
@@ -820,7 +816,7 @@ function CampaignUpdatesSection({
       </div>
 
       {canPublishRegularUpdate ? (
-        <form onSubmit={onSubmit} className="mt-5 space-y-3 rounded-[22px] bg-stone-50 p-4">
+        <form onSubmit={onSubmit} className="mt-6 space-y-3 rounded-[22px] bg-stone-50 p-4">
           <h3 className="text-lg font-semibold text-stone-950">Опубликовать обновление</h3>
           <input
             className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none transition focus:border-emerald-500"
@@ -848,13 +844,15 @@ function CampaignUpdatesSection({
         </form>
       ) : null}
 
-      <div className="mt-5 space-y-4">
+      <div className="mt-8">
         {updates.length ? (
-          updates.map((update) => (
-            <article key={update.id} className="rounded-[22px] border border-stone-100 bg-stone-50/80 p-4">
+          <div className="border-l border-stone-200 pl-6">
+            {updates.map((update) => (
+            <article key={update.id} className="relative pb-9 last:pb-0">
+              <span className="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full bg-emerald-600 ring-4 ring-[#fbfaf7]" />
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-400">{formatDate(update.created_at)}</p>
-              <h3 className="mt-2 text-xl font-semibold text-stone-950">{update.title}</h3>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-stone-700">{update.content}</p>
+              <h3 className="mt-2 text-2xl font-semibold text-stone-950">{update.title}</h3>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-stone-700">{update.content}</p>
               {update.photos.length ? (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {update.photos.map((photo) => (
@@ -863,9 +861,10 @@ function CampaignUpdatesSection({
                 </div>
               ) : null}
             </article>
-          ))
+            ))}
+          </div>
         ) : (
-          <div className="flex gap-4 rounded-[22px] border border-stone-200 bg-white px-4 py-5">
+          <div className="flex gap-4 border-y border-stone-200 py-6">
             <span className="relative mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-50">
               <span className="absolute h-3.5 w-px -translate-y-1 bg-stone-400" />
               <span className="absolute h-px w-3 translate-x-1 bg-stone-400" />
