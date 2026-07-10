@@ -95,7 +95,7 @@ export function LivingGoalsCarousel({ campaigns: initialCampaigns }: LivingGoals
 
   if (!campaigns.length) {
     return (
-      <div className="rounded-[24px] border border-stone-200 bg-white p-6 text-stone-600 shadow-sm">
+      <div className="rounded-[18px] border border-stone-200 bg-white p-6 text-stone-600 shadow-sm">
         Первые сборы скоро появятся здесь.
       </div>
     );
@@ -129,14 +129,14 @@ export function LivingGoalsCarousel({ campaigns: initialCampaigns }: LivingGoals
 
       <Link
         href="/campaigns"
-        className="flex min-h-[430px] w-[82vw] max-w-[360px] shrink-0 snap-start flex-col justify-between rounded-[26px] border border-stone-200 bg-stone-950 p-6 text-white shadow-[0_18px_55px_rgba(28,25,23,0.14)] outline-none transition hover:bg-emerald-800 focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[360px]"
+        className="flex min-h-[410px] w-[82vw] max-w-[350px] shrink-0 snap-start flex-col justify-between rounded-[20px] border border-stone-900 bg-stone-950 p-6 text-white shadow-[0_18px_55px_rgba(28,25,23,0.14)] outline-none transition hover:bg-emerald-900 focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[350px]"
       >
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-200">еще истории</p>
-          <h3 className="mt-4 text-3xl font-semibold leading-tight">Смотреть все сборы</h3>
-          <p className="mt-4 text-sm leading-6 text-stone-300">Найдите цель, которая отзовется именно вам.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-200">еще истории</p>
+          <h3 className="mt-4 text-3xl font-semibold leading-tight">Открыть весь каталог</h3>
+          <p className="mt-4 text-sm leading-6 text-stone-300">Больше людей, которым сейчас нужна помощь.</p>
         </div>
-        <span className="text-lg font-semibold">Перейти →</span>
+        <span className="text-base font-semibold">Смотреть →</span>
       </Link>
     </div>
   );
@@ -159,22 +159,22 @@ function LivingGoalCard({ campaign }: { campaign: CampaignListItem }) {
   return (
     <Link
       href={`/campaigns/${campaign.id}`}
-      className="group block w-[82vw] max-w-[380px] shrink-0 snap-start overflow-hidden rounded-[26px] border border-stone-200 bg-white shadow-[0_18px_55px_rgba(28,25,23,0.08)] outline-none transition hover:border-emerald-200 hover:shadow-[0_22px_65px_rgba(28,25,23,0.12)] focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[380px]"
+      className="group block w-[82vw] max-w-[380px] shrink-0 snap-start overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-[0_16px_45px_rgba(28,25,23,0.07)] outline-none transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_24px_60px_rgba(28,25,23,0.11)] focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[380px]"
     >
-      <div className="relative aspect-[16/11] overflow-hidden bg-stone-100">
+      <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
         {campaign.cover_image_url ? (
           <img src={campaign.cover_image_url} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]" draggable={false} />
         ) : (
           <div className="h-full w-full bg-[#e9ded1]" />
         )}
-        <div className="absolute left-4 top-4 rounded-full bg-white/92 px-3 py-1 text-xs font-medium text-stone-700 shadow-sm">
+        <div className="absolute left-3 top-3 rounded-full bg-white/92 px-3 py-1 text-xs font-medium text-stone-700 shadow-sm">
           {categoryLabels[campaign.category] ?? campaign.category}
         </div>
       </div>
 
       <div className="p-5">
         <h3 className="text-xl font-semibold leading-tight text-stone-950">{campaign.title}</h3>
-        <p className="mt-3 line-clamp-3 text-sm leading-6 text-stone-600">{campaign.description_preview}</p>
+        <p className="mt-3 line-clamp-2 text-sm leading-6 text-stone-600">{campaign.description_preview}</p>
 
         <div className="mt-6">
           <div className="mb-3 flex items-end justify-between gap-4">
@@ -187,7 +187,7 @@ function LivingGoalCard({ campaign }: { campaign: CampaignListItem }) {
           <ProgressBar value={campaign.progress_percentage} />
           <div className="mt-4 flex items-center justify-between gap-3 text-sm">
             <span className="text-stone-500">{campaign.progress_percentage}% цели</span>
-            <span className="font-semibold text-stone-950 group-hover:text-emerald-800">Открыть</span>
+            <span className="font-semibold text-stone-950 group-hover:text-emerald-800">История →</span>
           </div>
         </div>
       </div>

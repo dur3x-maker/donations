@@ -10,46 +10,43 @@ type LandingMotionProps = {
 
 export function LandingMotion({ stats, featuredCampaign }: LandingMotionProps) {
   const metrics = [
-    { value: stats ? formatNumber(stats.users_count) : "—", label: "пользователей" },
-    { value: stats ? formatMoney(stats.total_donated_amount) : "—", label: "собрано" },
-    { value: stats ? formatNumber(stats.campaigns_completed) : "—", label: "завершённых историй" },
+    { value: stats ? formatNumber(stats.campaigns_active) : "—", label: "активных историй" },
+    { value: stats ? formatMoney(stats.total_donated_amount) : "—", label: "уже передано" },
+    { value: stats ? formatNumber(stats.campaigns_completed) : "—", label: "историй закрыто" },
   ];
 
   return (
-    <section className="overflow-hidden rounded-[28px] bg-[#f7f0e8] px-5 py-9 shadow-sm md:px-10 md:py-12 lg:px-12">
-      <div className="grid items-center gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">тёплая поддержка</p>
-          <h1 className="mt-4 max-w-3xl text-[38px] font-semibold leading-[1.04] text-stone-950 sm:text-6xl">
-            Маленькие вклады двигают большие человеческие цели.
+    <section className="overflow-hidden rounded-[24px] border border-stone-200 bg-[#fbfaf7] px-5 py-8 shadow-[0_22px_70px_rgba(28,25,23,0.08)] md:px-8 md:py-10 lg:px-10">
+      <div className="grid items-center gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:gap-12">
+        <div className="max-w-3xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-800">помощь, которую видно</p>
+          <h1 className="mt-3 text-[36px] font-semibold leading-[1.04] text-stone-950 sm:text-5xl lg:text-[58px]">
+            Выберите историю человека, которому нужна поддержка.
           </h1>
-          <p className="mt-5 max-w-2xl text-[16px] leading-7 text-stone-700 md:text-[17px]">
-            Выберите историю, поддержите сбор и помогите человеку стать ближе к цели. TipForTea делает помощь понятной, спокойной и заметной.
+          <p className="mt-5 max-w-xl text-[16px] leading-7 text-stone-700 md:text-[17px]">
+            На TipForTea видны цель, прогресс и итог. Помогайте тем, чья история вам близка.
           </p>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <a href="#campaigns" className="rounded-full bg-stone-950 px-6 py-3 text-center font-semibold text-white transition hover:bg-emerald-700">
-              Смотреть сборы
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <a href="#campaigns" className="rounded-full bg-stone-950 px-6 py-3 text-center font-semibold text-white shadow-[0_14px_30px_rgba(28,25,23,0.18)] transition hover:bg-emerald-800">
+              Смотреть истории
             </a>
-            <Link href="/campaigns/new" className="rounded-full border border-stone-300 bg-white/72 px-6 py-3 text-center font-semibold text-stone-800 transition hover:bg-white">
+            <Link href="/campaigns/new" className="rounded-full border border-stone-300 bg-transparent px-6 py-3 text-center font-semibold text-stone-700 transition hover:border-stone-400 hover:bg-white">
               Открыть сбор
             </Link>
           </div>
 
-          <div className="mt-7 grid max-w-xl grid-cols-3 gap-3">
+          <div className="mt-8 grid max-w-xl grid-cols-1 gap-2 border-y border-stone-200 py-4 sm:grid-cols-3 sm:gap-4">
             {metrics.map((metric) => (
-              <div key={metric.label} className="rounded-2xl border border-stone-200/80 bg-white/55 px-3 py-3">
-                <p className="text-lg font-semibold leading-none text-stone-950 md:text-xl">{metric.value}</p>
+              <div key={metric.label}>
+                <p className="text-xl font-semibold leading-none text-stone-950 md:text-2xl">{metric.value}</p>
                 <p className="mt-1 text-xs leading-4 text-stone-500">{metric.label}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative min-h-[360px] px-1 py-5 sm:min-h-[430px] lg:min-h-[500px]">
-          <div className="absolute left-5 top-8 h-28 w-28 rounded-full bg-emerald-900/10 blur-3xl" />
-          <div className="absolute bottom-10 right-2 h-36 w-36 rounded-full bg-rose-900/10 blur-3xl" />
-
+        <div className="relative px-0 py-1">
           {featuredCampaign ? <FeaturedCampaignCard campaign={featuredCampaign} /> : <EmptyFeaturedCampaign />}
         </div>
       </div>
@@ -61,23 +58,24 @@ function FeaturedCampaignCard({ campaign }: { campaign: CampaignListItem }) {
   return (
     <Link
       href={`/campaigns/${campaign.id}`}
-      className="relative mx-auto block max-w-[430px] rotate-[-2deg] rounded-[30px] border border-white/70 bg-white p-4 shadow-[0_30px_90px_rgba(28,25,23,0.18)] transition hover:rotate-0 hover:shadow-[0_34px_100px_rgba(28,25,23,0.22)] sm:p-5"
+      className="group relative mx-auto block max-w-[520px] overflow-hidden rounded-[24px] border border-stone-200 bg-white shadow-[0_28px_80px_rgba(28,25,23,0.15)] transition hover:-translate-y-0.5 hover:shadow-[0_34px_90px_rgba(28,25,23,0.18)]"
     >
-      <div className="overflow-hidden rounded-[24px] bg-stone-100">
+      <div className="relative overflow-hidden bg-stone-100">
         {campaign.cover_image_url ? (
-          <img src={campaign.cover_image_url} alt="" className="aspect-[16/10] w-full object-cover" />
+          <img src={campaign.cover_image_url} alt="" className="aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-[1.025]" />
         ) : (
-          <div className="aspect-[16/10] w-full bg-[linear-gradient(135deg,#e9ded1,#d9f99d)]" />
+          <div className="aspect-[16/10] w-full bg-[#e9ded1]" />
         )}
+        <span className="absolute left-4 top-4 rounded-full bg-white/92 px-3 py-1 text-xs font-semibold text-stone-800 shadow-sm">сейчас собирают</span>
       </div>
 
-      <div className="mt-5">
+      <div className="p-5 md:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">живой сбор</p>
-            <h2 className="mt-2 text-xl font-semibold leading-tight text-stone-950">{campaign.title}</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">история на главной</p>
+            <h2 className="mt-2 text-2xl font-semibold leading-tight text-stone-950">{campaign.title}</h2>
           </div>
-          <span className="shrink-0 rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600">{campaign.progress_percentage}%</span>
+          <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">{campaign.progress_percentage}%</span>
         </div>
 
         <div className="mt-5">
@@ -93,7 +91,7 @@ function FeaturedCampaignCard({ campaign }: { campaign: CampaignListItem }) {
 
         <div className="mt-5 flex items-center justify-between gap-4">
           <p className="text-sm text-stone-500">{formatNumber(campaign.contributors_count)} участников</p>
-          <span className="text-sm font-semibold text-emerald-800">Открыть</span>
+          <span className="text-sm font-semibold text-emerald-800 group-hover:text-emerald-950">Посмотреть историю →</span>
         </div>
       </div>
     </Link>
@@ -102,11 +100,11 @@ function FeaturedCampaignCard({ campaign }: { campaign: CampaignListItem }) {
 
 function EmptyFeaturedCampaign() {
   return (
-    <div className="relative mx-auto max-w-[430px] rotate-[-2deg] rounded-[30px] border border-white/70 bg-white p-6 shadow-[0_30px_90px_rgba(28,25,23,0.18)]">
-      <div className="rounded-[24px] bg-stone-100 p-8">
+    <div className="relative mx-auto max-w-[520px] rounded-[24px] border border-stone-200 bg-white p-6 shadow-[0_28px_80px_rgba(28,25,23,0.15)]">
+      <div className="rounded-[20px] bg-stone-100 p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">первые истории впереди</p>
-        <h2 className="mt-3 text-2xl font-semibold leading-tight text-stone-950">Когда появятся реальные сборы, мы покажем их здесь.</h2>
-        <p className="mt-4 text-sm leading-6 text-stone-600">Платформа не подставляет демонстрационные суммы и показывает только данные из базы.</p>
+        <h2 className="mt-3 text-2xl font-semibold leading-tight text-stone-950">Здесь будут только реальные сборы.</h2>
+        <p className="mt-4 text-sm leading-6 text-stone-600">Без демонстрационных сумм и выдуманных историй.</p>
       </div>
     </div>
   );

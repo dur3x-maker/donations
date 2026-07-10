@@ -12,13 +12,13 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
     <section id="activity" className="scroll-mt-24">
       <div className="mb-3">
         <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">активность платформы</p>
-          <h2 className="mt-1 text-lg font-semibold text-stone-950">Тихие признаки живого участия</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">сейчас происходит</p>
+          <h2 className="mt-1 text-lg font-semibold text-stone-950">Новые действия людей</h2>
         </div>
       </div>
 
       {visibleActivities.length ? (
-        <div className="rounded-[22px] border border-stone-200 bg-white px-3 py-2 shadow-sm">
+        <div className="rounded-[18px] border border-stone-200 bg-white/75 px-3 py-2 shadow-sm">
           <div className="divide-y divide-stone-100">
             {visibleActivities.map((activity) => (
               <ActivityRow key={activity.id} activity={activity} />
@@ -26,8 +26,8 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
           </div>
         </div>
       ) : (
-        <div className="rounded-[26px] border border-stone-200 bg-white p-6 text-sm leading-6 text-stone-600 shadow-sm">
-          Здесь появятся первые спокойные отметки: кто поддержал сбор, открыл цель или помог закрыть историю.
+        <div className="rounded-[18px] border border-stone-200 bg-white/75 p-6 text-sm leading-6 text-stone-600 shadow-sm">
+          Здесь появятся первые действия: поддержка, новые истории и закрытые сборы.
         </div>
       )}
     </section>

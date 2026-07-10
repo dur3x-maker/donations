@@ -6,7 +6,7 @@ export function CompletedCampaignCard({ campaign }: { campaign: CompletedCampaig
   return (
     <Link
       href={`/campaigns/${campaign.id}`}
-      className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-emerald-100 bg-white shadow-sm outline-none transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg focus-visible:ring-4 focus-visible:ring-emerald-200"
+      className="group flex h-full flex-col overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-sm outline-none transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-[0_22px_60px_rgba(28,25,23,0.10)] focus-visible:ring-4 focus-visible:ring-emerald-200"
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
         {campaign.cover_image_url ? (
@@ -18,8 +18,8 @@ export function CompletedCampaignCard({ campaign }: { campaign: CompletedCampaig
         ) : (
           <div className="h-full w-full bg-[#e9ded1]" />
         )}
-        <span className="absolute left-4 top-4 rounded-full bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm">
-          История завершена
+        <span className="absolute left-3 top-3 rounded-full bg-emerald-700 px-3 py-1 text-xs font-semibold text-white shadow-sm">
+          помощь дошла
         </span>
       </div>
 
@@ -31,9 +31,9 @@ export function CompletedCampaignCard({ campaign }: { campaign: CompletedCampaig
         </div>
 
         {campaign.completion_report_preview ? (
-          <p className="mt-4 line-clamp-3 text-sm leading-6 text-stone-600">{campaign.completion_report_preview}</p>
+          <p className="mt-4 line-clamp-2 text-sm leading-6 text-stone-600">{campaign.completion_report_preview}</p>
         ) : (
-          <p className="mt-4 text-sm leading-6 text-stone-400">Итоговый отчёт пока без текстового описания.</p>
+          <p className="mt-4 text-sm leading-6 text-stone-400">Итоговый отчёт пока без описания.</p>
         )}
 
         {campaign.completion_photos.length ? (
@@ -51,10 +51,10 @@ export function CompletedCampaignCard({ campaign }: { campaign: CompletedCampaig
 
         <div className="mt-auto flex items-end justify-between gap-4 border-t border-stone-100 pt-5">
           <div>
-            <p className="text-xs uppercase tracking-[0.12em] text-stone-400">Итого собрано</p>
+            <p className="text-xs text-stone-400">собрано</p>
             <p className="mt-1 text-2xl font-semibold text-stone-950">{formatMoney(campaign.current_amount)}</p>
           </div>
-          <span className="text-sm font-semibold text-emerald-800 group-hover:text-emerald-950">Смотреть результат →</span>
+          <span className="text-sm font-semibold text-emerald-800 group-hover:text-emerald-950">Результат →</span>
         </div>
       </div>
     </Link>

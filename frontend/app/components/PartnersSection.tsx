@@ -17,25 +17,22 @@ export function PartnersSection() {
   const visiblePartners = partners.filter((partner) => partner.isVisible !== false);
 
   return (
-    <section className="rounded-[28px] border border-stone-200 bg-white/70 p-6 shadow-sm md:p-8">
-      <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+    <section className="rounded-[18px] border border-stone-200 bg-white/65 p-5 shadow-sm md:p-6">
+      <div className="flex flex-col gap-5">
         <div className="max-w-xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-400">нам доверяют</p>
-          <h2 className="mt-2 text-2xl font-semibold text-stone-950 md:text-3xl">Партнеры платформы</h2>
-          <p className="mt-3 text-sm leading-6 text-stone-600">
-            Здесь будет аккуратная база фондов, сервисов и интеграций, которые помогают делать поддержку надежнее.
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">партнеры</p>
+          <h2 className="mt-1 text-lg font-semibold text-stone-950">Организации рядом с платформой</h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {visiblePartners.map((partner) => (
             <div
               key={partner.name}
-              className="flex h-20 min-w-0 items-center justify-center rounded-2xl border border-stone-200 bg-stone-50 px-4 text-center grayscale"
+              className="flex h-14 min-w-0 items-center justify-center rounded-xl border border-stone-200 bg-stone-50 px-3 text-center grayscale"
               aria-label={partner.name}
               title={partner.name}
             >
-              <span className="text-lg font-semibold tracking-[0.12em] text-stone-500">{partner.mark}</span>
+              <span className="text-sm font-semibold tracking-[0.12em] text-stone-500">{partner.mark}</span>
             </div>
           ))}
         </div>
