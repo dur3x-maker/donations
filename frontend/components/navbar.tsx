@@ -49,18 +49,18 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-stone-950 pt-[env(safe-area-inset-top)] text-white shadow-[0_14px_40px_rgba(28,25,23,0.18)]">
-        <nav className="mx-auto hidden max-w-7xl items-center justify-between gap-3 px-4 py-3 text-sm md:flex md:px-6">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-stone-950 pt-[env(safe-area-inset-top)] text-white">
+        <nav className="mx-auto hidden max-w-[1180px] items-center justify-between gap-3 px-8 py-3 text-sm lg:flex">
           <Brand />
 
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">
             <button onClick={() => setIsContactOpen(true)} className="rounded-full px-2 py-2 font-medium text-stone-300 transition hover:bg-white/10 hover:text-white sm:px-3" type="button">
               Поддержка
             </button>
-            <Link href="/faq" className="rounded-full px-2 py-2 font-medium text-stone-300 transition hover:bg-white/10 hover:text-white sm:px-3">
+            <Link href="/faq" className="px-2 py-2 font-medium text-stone-300 transition hover:text-white sm:px-3">
               FAQ
             </Link>
-            <Link href="/campaigns/completed" className="hidden rounded-full px-3 py-2 font-medium text-stone-300 transition hover:bg-white/10 hover:text-white lg:inline-flex">
+            <Link href="/campaigns/completed" className="hidden px-3 py-2 font-medium text-stone-300 transition hover:text-white lg:inline-flex">
               Истории успеха
             </Link>
             {isAuthenticated && user ? (
@@ -71,20 +71,20 @@ export function Navbar() {
                   </span>
                   <span className="hidden max-w-28 truncate sm:inline">{user.username}</span>
                 </Link>
-                <Link href="/dashboard" className="hidden rounded-full px-4 py-2 font-medium text-stone-300 transition hover:bg-white/10 hover:text-white sm:inline-flex">
-                  Кабинет
+                <Link href="/dashboard" className="hidden px-3 py-2 font-medium text-stone-300 transition hover:text-white sm:inline-flex">
+                  Мои сборы
                 </Link>
                 <NotificationsMenu />
-                <button onClick={logout} className="hidden rounded-full px-4 py-2 font-medium text-stone-300 transition hover:bg-white/10 hover:text-white sm:inline-flex" type="button">
+                <button onClick={logout} className="hidden px-3 py-2 font-medium text-stone-300 transition hover:text-white sm:inline-flex" type="button">
                   Выйти
                 </button>
               </>
             ) : (
               <>
-                <Link href="/login" className="rounded-full px-3 py-2 font-medium text-stone-300 transition hover:bg-white/10 hover:text-white sm:px-4">
+                <Link href="/login" className="px-3 py-2 font-medium text-stone-300 transition hover:text-white sm:px-4">
                   Войти
                 </Link>
-                <Link href="/register" className="hidden rounded-full px-4 py-2 font-medium text-stone-300 transition hover:bg-white/10 hover:text-white sm:inline-flex">
+                <Link href="/register" className="hidden px-3 py-2 font-medium text-stone-300 transition hover:text-white sm:inline-flex">
                   Регистрация
                 </Link>
               </>
@@ -93,7 +93,7 @@ export function Navbar() {
           </div>
         </nav>
 
-        <nav className="mx-auto grid max-w-7xl grid-cols-[44px_1fr_auto] items-center gap-2 px-3 py-2 md:hidden">
+        <nav className="mx-auto grid max-w-[1180px] grid-cols-[44px_1fr_auto] items-center gap-2 px-3 py-2 lg:hidden">
           <button
             className="flex h-11 w-11 items-center justify-center rounded-full text-2xl leading-none text-white transition hover:bg-white/10"
             type="button"
@@ -111,9 +111,9 @@ export function Navbar() {
       </header>
 
       {isDrawerOpen ? (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden">
           <button className="absolute inset-0 bg-stone-950/60" type="button" aria-label="Закрыть меню" onClick={closeDrawer} />
-          <aside className="absolute left-0 top-0 flex h-full w-[min(86vw,320px)] flex-col bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] shadow-2xl">
+          <aside className="absolute left-0 top-0 flex h-full w-[min(86vw,320px)] flex-col bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] shadow-xl">
             <div className="flex items-center justify-between border-b border-stone-100 px-4 pb-4">
               <Brand dark />
               <button className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 text-xl text-stone-700" type="button" aria-label="Закрыть меню" onClick={closeDrawer}>

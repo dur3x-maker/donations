@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <AuthProvider>
           <Navbar />
-          <main className="mx-auto max-w-7xl px-4 py-5 md:px-6 md:py-8">{children}</main>
+          <main className="mx-auto max-w-[1180px] px-4 py-7 md:px-8 md:py-12">{children}</main>
         </AuthProvider>
       </body>
     </html>

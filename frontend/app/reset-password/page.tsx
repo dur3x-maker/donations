@@ -37,21 +37,21 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <section className="mx-auto max-w-xl space-y-6">
-      <div className="rounded-[24px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:rounded-[32px] md:p-10">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-emerald-300">новый пароль</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-5xl">Задайте новый пароль</h1>
-        <p className="mt-4 leading-7 text-stone-300">После смены пароля вы сразу войдете в аккаунт.</p>
-      </div>
+    <section className="mx-auto max-w-xl space-y-8 py-4 md:py-8">
+      <header className="border-b border-stone-200 pb-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">новый пароль</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-5xl">Задайте новый пароль</h1>
+        <p className="mt-4 leading-7 text-stone-600">После смены пароля вы сразу войдёте в аккаунт.</p>
+      </header>
 
       {!token ? (
         <UserErrorAlert error={{ title: "Ссылка недействительна", message: "В ссылке нет токена восстановления.", actions: [{ label: "Запросить новую ссылку", href: "/forgot-password" }] }} />
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-[24px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)] md:rounded-[28px]">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <label className="block text-sm font-medium text-stone-700">
             Новый пароль
             <input
-              className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:bg-white"
+              className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
               minLength={8}
               type="password"
               value={password}
@@ -62,7 +62,7 @@ export default function ResetPasswordPage() {
           <label className="block text-sm font-medium text-stone-700">
             Повторите пароль
             <input
-              className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:bg-white"
+              className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
               minLength={8}
               type="password"
               value={confirmPassword}

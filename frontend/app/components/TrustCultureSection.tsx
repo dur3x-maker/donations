@@ -31,8 +31,8 @@ const workSteps = [
 export function TrustCultureSection() {
   return (
     <div className="space-y-10">
-      <section className="relative left-1/2 w-screen -translate-x-1/2 bg-stone-950 px-4 py-14 text-white shadow-[0_28px_90px_rgba(28,25,23,0.22)] md:px-6 md:py-16 lg:py-20">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+      <section className="relative left-1/2 w-screen -translate-x-1/2 bg-stone-950 px-4 py-14 text-white md:px-8 md:py-16 lg:py-20">
+        <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div className="max-w-4xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">почему можно доверять</p>
             <h2 className="mt-4 text-4xl font-semibold leading-[1.02] tracking-tight md:text-6xl lg:text-7xl">

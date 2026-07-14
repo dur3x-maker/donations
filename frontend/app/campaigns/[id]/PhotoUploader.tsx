@@ -70,7 +70,7 @@ export function PhotoUploader({
   return (
     <div className="space-y-3">
       <label
-        className="flex cursor-pointer flex-col items-center justify-center rounded-[22px] border border-dashed border-stone-300 bg-white px-5 py-7 text-center transition hover:border-emerald-400 hover:bg-emerald-50/40"
+        className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-white px-5 py-7 text-center transition hover:border-emerald-400 hover:bg-emerald-50/40"
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
       >
@@ -90,7 +90,7 @@ export function PhotoUploader({
       {photos.length ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {photos.map((photo) => (
-            <div key={photo.id} className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
+            <div key={photo.id} className="overflow-hidden rounded-xl border border-stone-200 bg-white">
               <img src={photo.previewUrl} alt="" className="aspect-[4/3] w-full object-cover" />
               <div className="flex items-center justify-between gap-2 px-3 py-2">
                 <span className="truncate text-xs text-stone-500">{photo.file.name}</span>

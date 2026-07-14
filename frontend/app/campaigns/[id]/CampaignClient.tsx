@@ -321,27 +321,28 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
 
   if (!campaign.is_active) {
     return (
-      <section className="mx-auto max-w-3xl rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:p-10">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-emerald-300">на проверке</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-5xl">Этот сбор временно недоступен.</h1>
-        <p className="mt-4 max-w-2xl leading-7 text-stone-300">Команда модерации внимательно смотрит ситуацию. Спасибо, что помогаете сохранять площадку безопасной.</p>
+      <section className="mx-auto max-w-3xl border-y border-stone-200 py-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">{isOwner ? "ваш сбор на проверке" : "на проверке"}</p>
+        <h1 className="mt-3 break-words text-3xl font-semibold tracking-[-0.03em] text-stone-950 [overflow-wrap:anywhere] md:text-5xl">Этот сбор временно недоступен.</h1>
+        <p className="mt-4 max-w-2xl leading-7 text-stone-600">Команда модерации внимательно смотрит ситуацию. Спасибо, что помогаете сохранять площадку безопасной.</p>
+        {isOwner ? <Link href="/dashboard" className="mt-5 inline-flex min-h-11 items-center font-semibold text-emerald-800 hover:text-emerald-950">Вернуться к моим сборам →</Link> : null}
       </section>
     );
   }
 
   return (
-    <div className="space-y-16 md:space-y-24">
+    <div className="space-y-14 md:space-y-20">
       <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-stone-950">
-        <div className="relative min-h-[72vh] overflow-hidden md:min-h-[80vh]">
+        <div className="relative min-h-[clamp(380px,50svh,430px)] overflow-hidden md:min-h-[500px] lg:min-h-[60vh]">
           {campaign.cover_image_url ? <img src={campaign.cover_image_url} alt="" className="absolute inset-0 h-full w-full object-cover" /> : null}
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(28,25,23,0.86),rgba(28,25,23,0.50)_52%,rgba(28,25,23,0.28)),linear-gradient(0deg,rgba(28,25,23,0.94),rgba(28,25,23,0.36)_58%,rgba(28,25,23,0.18))]" />
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[linear-gradient(0deg,rgba(28,25,23,0.96),rgba(28,25,23,0))]" />
-          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 pb-8 md:px-6 md:pb-12">
+          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-[1180px] px-4 pb-8 md:px-8 md:pb-12">
             <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-semibold uppercase tracking-[0.14em] text-stone-200/80">
               <span>{categoryLabels[campaign.category] ?? campaign.category}</span>
               {campaign.is_verified ? <span className="text-emerald-200">проверено</span> : null}
             </div>
-            <h1 className="max-w-5xl text-5xl font-semibold leading-[0.98] tracking-[-0.045em] text-white drop-shadow-[0_5px_26px_rgba(0,0,0,0.58)] md:text-7xl lg:text-8xl">
+            <h1 className="max-w-4xl break-words text-4xl font-semibold leading-[1.02] tracking-[-0.04em] text-white [overflow-wrap:anywhere] md:text-6xl">
               {campaign.title}
             </h1>
             <p className="mt-6 text-sm text-stone-200/85">
@@ -358,15 +359,26 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-0 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">осталось собрать</p>
-        <p className="mt-3 text-5xl font-semibold tracking-[-0.04em] text-stone-950 md:text-7xl">{formatMoney(remainingAmount)}</p>
-        <div className="mx-auto mt-5 max-w-4xl">
-          <ProgressBar value={campaign.progress_percentage} className="h-5" />
+      <section className="mx-auto max-w-4xl border-y border-stone-200 py-7">
+        {isOwner ? (
+          <OwnerCampaignTools
+            campaign={campaign}
+            withdrawalAvailable={Boolean(withdrawalInfo?.available)}
+            onWithdrawal={() => setIsWithdrawalOpen(true)}
+          />
+        ) : null}
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">осталось собрать</p>
+            <p className="mt-2 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-5xl">{formatMoney(remainingAmount)}</p>
+          </div>
+          <p className="text-sm text-stone-500">{campaign.contributors_count} человек уже помогли</p>
         </div>
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-stone-500">
+        <div className="mt-5">
+          <ProgressBar value={campaign.progress_percentage} className="h-3" />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-stone-500">
           <span>{formatMoney(campaign.current_amount)} уже собрано</span>
-          <span>{campaign.contributors_count} помогли</span>
           <span>{campaign.progress_percentage}% цели</span>
         </div>
       </section>
@@ -376,16 +388,6 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">следующий шаг</p>
           <h2 className="mt-2 text-2xl font-semibold text-stone-950">История достигла цели.</h2>
           <p className="mt-2 max-w-2xl leading-7 text-stone-700">Средства будут доступны для вывода через банк-партнёр.</p>
-          {isOwner ? (
-            <div className="mt-4 flex flex-wrap gap-3">
-              {campaign.status === "AWAITING_REPORT" ? <a href="#completion-report" className="inline-flex rounded-full bg-stone-950 px-5 py-3 font-semibold text-white hover:bg-emerald-800">Перейти к итоговому отчёту</a> : null}
-              {withdrawalInfo?.available ? (
-                <button className="rounded-full bg-emerald-700 px-5 py-3 font-semibold text-white transition hover:bg-emerald-800" onClick={() => setIsWithdrawalOpen(true)} type="button">
-                  Вывести средства
-                </button>
-              ) : null}
-            </div>
-          ) : null}
         </section>
       ) : null}
 
@@ -394,26 +396,26 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
       <FutureUseOfFundsSection items={[]} />
 
       <section className="relative left-1/2 w-screen -translate-x-1/2 bg-stone-950 px-4 py-16 text-white md:px-6 md:py-20">
-        <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-[0.92fr_1.08fr] md:items-center">
+        <div className="mx-auto grid max-w-[980px] gap-10 md:grid-cols-[0.95fr_1.05fr] md:items-center">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">поддержать</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">{isOwner ? "публичный вид" : "поддержать"}</p>
             <h2 className="mt-4 text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
-              Каждый вклад приближает человека к цели.
+              {isOwner ? "Так вашу историю смогут поддержать." : "Каждый вклад приближает человека к цели."}
             </h2>
             <p className="mt-5 max-w-md text-base leading-7 text-stone-300">
-              Вы уже знаете эту историю. Остался последний шаг, который может сдвинуть её вперед.
+              {isOwner ? "Вы видите ту же форму, что и посетители страницы. Авторские действия находятся выше и не мешают чтению истории." : "Вы уже знаете эту историю. Остался последний шаг, который может сдвинуть её вперед."}
             </p>
           </div>
 
           {canDonate ? (
-            <form onSubmit={handleSubmit} className="space-y-5 rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.18)] backdrop-blur md:p-6">
+            <form onSubmit={handleSubmit} className="space-y-5 border-t border-white/20 pt-6">
               <div className="grid grid-cols-3 gap-2">
                 {quickAmounts.map((value) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setAmount(String(value))}
-                    className={`min-h-12 rounded-full px-3 py-2 text-sm font-semibold transition ${amount === String(value) ? "bg-white text-stone-950" : "bg-white/10 text-white hover:bg-white/16"}`}
+                    className={`min-h-12 rounded-xl px-3 py-2 text-sm font-semibold transition ${amount === String(value) ? "bg-white text-stone-950" : "border border-white/20 text-white hover:bg-white/10"}`}
                   >
                     {value}
                   </button>
@@ -422,7 +424,7 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
               <label className="block text-sm font-semibold text-stone-200">
                 Своя сумма
                 <input
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white px-4 py-4 text-lg font-semibold text-stone-950 outline-none transition focus:border-emerald-300 focus:ring-4 focus:ring-emerald-300/20"
+                  className="mt-2 w-full rounded-xl border border-white/20 bg-white px-4 py-4 text-lg font-semibold text-stone-950 outline-none transition focus:border-emerald-300 focus:ring-4 focus:ring-emerald-300/20"
                   min={MIN_DONATION_AMOUNT}
                   step="0.01"
                   type="number"
@@ -433,13 +435,13 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
               {amount !== "" && Number.isFinite(amountNumber) && amountNumber < MIN_DONATION_AMOUNT ? (
                 <p className="text-sm text-rose-200">Минимальная сумма поддержки — 100 ₽.</p>
               ) : null}
-              <button className="min-h-14 w-full rounded-full bg-emerald-600 px-5 py-3 text-lg font-semibold text-white shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-70" disabled={paymentState === "processing"} type="submit">
+              <button className="min-h-14 w-full rounded-full bg-emerald-600 px-5 py-3 text-lg font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-70" disabled={paymentState === "processing"} type="submit">
                 {paymentState === "processing" ? "Отправляем..." : "Поддержать"}
               </button>
               {message ? <p className="break-words text-sm text-stone-200">{message}</p> : null}
             </form>
           ) : (
-            <section className="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 md:p-6">
+            <section className="border-t border-white/20 py-6">
               <h3 className="text-2xl font-semibold leading-tight tracking-[-0.02em] text-white">
                 {isCompleted ? "История завершена" : "Сбор достиг цели"}
               </h3>
@@ -481,7 +483,7 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
         onSubmit={handleUpdateSubmit}
       />
 
-      {wsMessage ? <p className="mx-auto max-w-3xl rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{wsMessage}</p> : null}
+      {wsMessage ? <p className="mx-auto max-w-3xl border-y border-amber-200 bg-amber-50/60 py-3 text-sm text-amber-900">{wsMessage}</p> : null}
       <CampaignDonationsList
         donations={donations}
         hasMore={hasMoreDonations}
@@ -491,7 +493,7 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
       />
 
       <section className="mx-auto max-w-3xl border-t border-stone-200 pt-8">
-        <AuthorReputationCard campaign={campaign} reputation={authorReputation} />
+        <AuthorReputationCard campaign={campaign} reputation={authorReputation} isOwner={isOwner} />
       </section>
 
       <ShareSection
@@ -499,6 +501,7 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
         reportMessage={reportMessage}
         onShare={handleShare}
         onReport={() => setIsReportOpen(true)}
+        isOwner={isOwner}
       />
 
       {isReportOpen ? (
@@ -519,10 +522,10 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
             </label>
             <label className="block text-sm font-semibold text-stone-700">
               Детали
-              <textarea className="mt-2 min-h-28 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:bg-white" value={reportDetails} onChange={(event) => setReportDetails(event.target.value)} />
+              <textarea className="mt-2 min-h-28 w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:bg-white" value={reportDetails} onChange={(event) => setReportDetails(event.target.value)} />
             </label>
             <div className="flex flex-wrap gap-3">
-              <button className="rounded-full bg-stone-950 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-70" disabled={isReporting} type="submit">
+              <button className="min-h-11 rounded-full bg-stone-950 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-70" disabled={isReporting} type="submit">
                 {isReporting ? "Отправляем..." : "Отправить"}
               </button>
               <button className="rounded-full bg-stone-100 px-5 py-3 font-semibold text-stone-700 transition hover:bg-stone-200" type="button" onClick={() => setIsReportOpen(false)}>
@@ -567,6 +570,54 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
   );
 }
 
+function OwnerCampaignTools({
+  campaign,
+  withdrawalAvailable,
+  onWithdrawal,
+}: {
+  campaign: CampaignDetail;
+  withdrawalAvailable: boolean;
+  onWithdrawal: () => void;
+}) {
+  const isActive = campaign.status === "ACTIVE";
+  const needsReport = campaign.status === "AWAITING_REPORT";
+  const hasPrimaryAction = isActive || needsReport || withdrawalAvailable;
+
+  return (
+    <div className="mb-7 flex flex-col gap-4 border-b border-stone-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">ваша история · {campaignStatusLabel(campaign.status)}</p>
+        <p className="mt-2 text-sm leading-6 text-stone-600">Ниже страница выглядит так же, как для остальных посетителей.</p>
+      </div>
+      <div className="grid gap-2 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap sm:justify-end">
+        {isActive ? (
+          <>
+            <Link href={`/campaigns/${campaign.id}/edit`} className="inline-flex min-h-11 items-center justify-center rounded-full bg-stone-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800">
+              Редактировать
+            </Link>
+            <a href="#new-update" className="inline-flex min-h-11 items-center justify-center rounded-full border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-800 transition hover:border-emerald-400 hover:text-emerald-800">
+              Добавить обновление
+            </a>
+          </>
+        ) : null}
+        {needsReport ? <a href="#completion-report" className="inline-flex min-h-11 items-center justify-center rounded-full bg-stone-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800">Заполнить итоговый отчёт</a> : null}
+        {withdrawalAvailable ? <button className="inline-flex min-h-11 items-center justify-center rounded-full border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-800 transition hover:border-emerald-400 hover:text-emerald-800" onClick={onWithdrawal} type="button">Вывести средства</button> : null}
+        {!hasPrimaryAction ? <Link href="/dashboard" className="inline-flex min-h-11 items-center justify-center font-semibold text-emerald-800 hover:text-emerald-950">Открыть мои сборы →</Link> : null}
+      </div>
+    </div>
+  );
+}
+
+function campaignStatusLabel(status: CampaignDetail["status"]) {
+  if (status === "ACTIVE") return "идёт сбор";
+  if (status === "GOAL_REACHED") return "цель достигнута";
+  if (status === "AWAITING_REPORT") return "ожидается отчёт";
+  if (status === "COMPLETED") return "история завершена";
+  if (status === "REVISION_REQUIRED") return "нужны исправления";
+  if (status === "REJECTED") return "не опубликован";
+  return "на проверке";
+}
+
 function CompletionReportSection({
   campaign,
   report,
@@ -592,7 +643,7 @@ function CompletionReportSection({
 }) {
   if (report) {
     return (
-      <section className="rounded-[28px] border border-emerald-200 bg-[linear-gradient(145deg,#ecfdf5,#ffffff)] p-5 shadow-[0_18px_55px_rgba(6,78,59,0.10)] md:p-6">
+      <section className="border-y border-emerald-200 bg-emerald-50/50 py-7">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">итог</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-stone-950">История завершена</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -608,7 +659,7 @@ function CompletionReportSection({
             ))}
           </div>
         ) : null}
-        <div className="mt-6 rounded-[22px] bg-white/80 p-4 ring-1 ring-emerald-100">
+        <div className="mt-6 border-t border-emerald-200 pt-5">
           <h3 className="text-lg font-semibold text-stone-950">Стена благодарности</h3>
           <p className="mt-1 text-sm leading-6 text-stone-600">Спасибо людям, которые помогли этой истории состояться.</p>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -628,12 +679,12 @@ function CompletionReportSection({
   }
 
   return (
-    <section id="completion-report" className="scroll-mt-24 rounded-[28px] border-2 border-amber-300 bg-amber-50/80 p-5 shadow-[0_20px_60px_rgba(146,64,14,0.14)] md:p-6">
+    <section id="completion-report" className="scroll-mt-24 border-y border-amber-300 bg-amber-50/50 py-7">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">ожидается отчет</p>
       <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-stone-950">Опубликовать итоговый отчет</h2>
       <form onSubmit={onSubmit} className="mt-5 space-y-3">
         <textarea
-          className="min-h-32 w-full rounded-2xl border border-amber-200 bg-white px-4 py-3 outline-none transition focus:border-emerald-500"
+          className="min-h-32 w-full rounded-xl border border-amber-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
           maxLength={5000}
           minLength={10}
           onChange={(event) => onGratitudeChange(event.target.value)}
@@ -652,7 +703,7 @@ function CompletionReportSection({
 }
 
 function ResultMetric({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-[18px] bg-white p-4 ring-1 ring-emerald-100"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-700">{label}</p><p className="mt-2 text-lg font-semibold text-stone-950">{value}</p></div>;
+  return <div className="border-l border-emerald-200 pl-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-700">{label}</p><p className="mt-2 text-lg font-semibold text-stone-950">{value}</p></div>;
 }
 
 function FutureUseOfFundsSection({ items }: { items: Array<{ label: string; value: string }> }) {
@@ -697,11 +748,13 @@ function ShareSection({
   reportMessage,
   onShare,
   onReport,
+  isOwner,
 }: {
   shareMessage: string | null;
   reportMessage: string | null;
   onShare: () => void;
   onReport: () => void;
+  isOwner: boolean;
 }) {
   return (
     <section className="mx-auto max-w-3xl border-t border-stone-200 pt-8">
@@ -714,13 +767,15 @@ function ShareSection({
           <button onClick={onShare} className="rounded-full bg-stone-950 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700" type="button">
             Поделиться
           </button>
-          <button
-            onClick={onReport}
-            className="rounded-full bg-stone-100 px-5 py-3 font-semibold text-stone-700 transition hover:bg-stone-200"
-            type="button"
-          >
-            Пожаловаться
-          </button>
+          {!isOwner ? (
+            <button
+              onClick={onReport}
+              className="rounded-full bg-stone-100 px-5 py-3 font-semibold text-stone-700 transition hover:bg-stone-200"
+              type="button"
+            >
+              Пожаловаться
+            </button>
+          ) : null}
         </div>
       </div>
       {shareMessage ? <p className="mt-3 text-sm text-emerald-700">{shareMessage}</p> : null}
@@ -729,7 +784,7 @@ function ShareSection({
   );
 }
 
-function AuthorReputationCard({ campaign, reputation }: { campaign: CampaignDetail; reputation: AuthorReputation | null }) {
+function AuthorReputationCard({ campaign, reputation, isOwner }: { campaign: CampaignDetail; reputation: AuthorReputation | null; isOwner: boolean }) {
   return (
     <section>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">автор</p>
@@ -738,7 +793,7 @@ function AuthorReputationCard({ campaign, reputation }: { campaign: CampaignDeta
           {(campaign.owner?.username ?? "А").slice(0, 1).toUpperCase()}
         </div>
         <div className="min-w-0">
-          <h2 className="truncate text-2xl font-semibold tracking-[-0.02em] text-stone-950">{campaign.owner?.username ?? "Автор истории"}</h2>
+          <h2 className="break-words text-2xl font-semibold tracking-[-0.02em] text-stone-950 [overflow-wrap:anywhere]">{campaign.owner?.username ?? "Автор истории"}</h2>
           <div className="mt-2 space-y-1 text-sm leading-6 text-stone-600">
             <p>{reputation ? `Создал ${reputation.campaigns_created} ${pluralizeStories(reputation.campaigns_created)}` : "Рассказывает свою историю на TipForTea"}</p>
             <p>{reputation ? `Помог собрать ${formatMoney(reputation.total_raised_amount)}` : "Статистика автора скоро появится"}</p>
@@ -747,7 +802,7 @@ function AuthorReputationCard({ campaign, reputation }: { campaign: CampaignDeta
       </div>
       {campaign.owner?.username ? (
         <Link href={`/u/${campaign.owner.username}`} className="mt-5 inline-flex rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-emerald-50 hover:text-emerald-800">
-          Посмотреть профиль автора
+          {isOwner ? "Открыть ваш публичный профиль" : "Посмотреть профиль автора"}
         </Link>
       ) : null}
     </section>
@@ -807,7 +862,7 @@ function CampaignUpdatesSection({
 }) {
   const canPublishRegularUpdate = isOwner && campaignStatus === "ACTIVE";
   return (
-    <section className="mx-auto max-w-3xl">
+    <section id="campaign-updates" className="mx-auto max-w-3xl scroll-mt-24">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200 pb-5">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">обновления</p>
@@ -817,32 +872,40 @@ function CampaignUpdatesSection({
       </div>
 
       {canPublishRegularUpdate ? (
-        <form onSubmit={onSubmit} className="mt-6 space-y-3 rounded-[22px] bg-stone-50 p-4">
-          <h3 className="text-lg font-semibold text-stone-950">Опубликовать обновление</h3>
-          <input
-            className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none transition focus:border-emerald-500"
-            minLength={3}
-            maxLength={160}
-            onChange={(event) => onTitleChange(event.target.value)}
-            placeholder="Заголовок"
-            required
-            value={title}
-          />
-          <textarea
-            className="min-h-32 w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 outline-none transition focus:border-emerald-500"
-            maxLength={5000}
-            minLength={10}
-            onChange={(event) => onContentChange(event.target.value)}
-            placeholder="Что произошло в истории"
-            required
-            value={content}
-          />
-          <PhotoUploader photos={photos} onChange={onPhotosChange} />
-          <button className="rounded-full bg-stone-950 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-70" disabled={isPublishing} type="submit">
-            {isPublishing ? "Публикуем..." : "Опубликовать обновление"}
-          </button>
-          {message ? <p className="text-sm text-stone-600">{message}</p> : null}
-        </form>
+        <details id="new-update" className="group mt-5 scroll-mt-24 border-y border-stone-200">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 font-semibold text-stone-950 [&::-webkit-details-marker]:hidden">
+            <span>
+              <span className="block">Добавить обновление</span>
+              <span className="mt-0.5 block text-sm font-normal text-stone-500">Расскажите участникам, что изменилось</span>
+            </span>
+            <span className="text-xl text-stone-400 transition group-open:rotate-45" aria-hidden="true">+</span>
+          </summary>
+          <form onSubmit={onSubmit} className="space-y-3 pb-6 pt-3">
+            <input
+              className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+              minLength={3}
+              maxLength={160}
+              onChange={(event) => onTitleChange(event.target.value)}
+              placeholder="Заголовок"
+              required
+              value={title}
+            />
+            <textarea
+              className="min-h-32 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+              maxLength={5000}
+              minLength={10}
+              onChange={(event) => onContentChange(event.target.value)}
+              placeholder="Что произошло в истории"
+              required
+              value={content}
+            />
+            <PhotoUploader photos={photos} onChange={onPhotosChange} />
+            <button className="min-h-12 w-full rounded-full bg-stone-950 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-70 sm:w-auto" disabled={isPublishing} type="submit">
+              {isPublishing ? "Публикуем..." : "Опубликовать обновление"}
+            </button>
+            {message ? <p className="text-sm text-stone-600">{message}</p> : null}
+          </form>
+        </details>
       ) : null}
 
       <div className="mt-8">

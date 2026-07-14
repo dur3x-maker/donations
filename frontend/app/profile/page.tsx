@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ParticipationCard } from "@/app/components/ParticipationCard";
+import { CampaignCard } from "@/app/components/CampaignCard";
 import { useAuth } from "@/components/providers/auth-provider";
-import { fetchProfileImpact, fetchProfileSummary, fetchUserAchievements, resendEmailVerification, updateProfile, uploadAvatar } from "@/lib/api";
+import { fetchProfileImpact, fetchProfileSummary, fetchPublicProfile, fetchUserAchievements, resendEmailVerification, updateProfile, uploadAvatar } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
-import type { AuthUser, ProfileImpact, ProfileSummary, UserAchievement } from "@/lib/types";
+import type { AuthUser, CampaignListItem, ProfileImpact, ProfileSummary, UserAchievement } from "@/lib/types";
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -18,6 +18,7 @@ export default function ProfilePage() {
   const [summary, setSummary] = useState<ProfileSummary | null>(null);
   const [impact, setImpact] = useState<ProfileImpact | null>(null);
   const [achievements, setAchievements] = useState<UserAchievement[]>([]);
+  const [createdCampaigns, setCreatedCampaigns] = useState<CampaignListItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [profileForm, setProfileForm] = useState({
     first_name: "",
@@ -38,15 +39,16 @@ export default function ProfilePage() {
   }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-    Promise.all([fetchProfileSummary(), fetchProfileImpact(), fetchUserAchievements()])
-      .then(([freshSummary, freshImpact, freshAchievements]) => {
+    if (!isAuthenticated || !user?.username) return;
+    Promise.all([fetchProfileSummary(), fetchProfileImpact(), fetchUserAchievements(), fetchPublicProfile(user.username)])
+      .then(([freshSummary, freshImpact, freshAchievements, publicProfile]) => {
         setSummary(freshSummary);
         setImpact(freshImpact);
         setAchievements(freshAchievements);
+        setCreatedCampaigns(publicProfile.campaigns_created);
       })
       .catch((requestError) => setError(requestError instanceof Error ? requestError.message : "Не удалось загрузить профиль."));
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.username]);
 
   useEffect(() => {
     if (!user) return;
@@ -61,7 +63,7 @@ export default function ProfilePage() {
   }, [user]);
 
   if (isLoading || !isAuthenticated || !user) return <LoadingCard />;
-  if (!summary || !impact) return error ? <ProfileError message={error} /> : <LoadingCard />;
+  if (!summary || !impact || createdCampaigns === null) return error ? <ProfileError message={error} /> : <LoadingCard />;
 
   const level = impact.current_level ?? "Путь помощи еще не начался";
   const displayName = fullName(user.first_name, user.last_name) || user.username;
@@ -133,38 +135,45 @@ export default function ProfilePage() {
   };
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5">
-      <header className="overflow-hidden rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.18)] md:p-8">
-        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] lg:items-start">
-          <div className="grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
-            <ProfileAvatar name={displayName} username={user.username} avatarUrl={profileForm.avatar_url || user.avatar_url} />
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">профиль участника</p>
-              <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">{displayName}</h1>
-              <p className="mt-2 text-lg font-medium text-stone-300">@{user.username}</p>
-              <div className="mt-4 flex flex-wrap gap-2 text-sm text-stone-200">
-                {user.is_verified ? <span className="rounded-full bg-emerald-100 px-3 py-1.5 font-semibold text-emerald-900">🟢 Email подтверждён</span> : <span className="rounded-full bg-amber-100 px-3 py-1.5 font-semibold text-amber-900">🟡 Email не подтверждён</span>}
-                <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10">С нами с {formatMonth(user.created_at)}</span>
-                {user.city ? <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10">{user.city}</span> : null}
-              </div>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-stone-100">
-                {user.bio || "Расскажите немного о себе: чем занимаетесь, почему вы на платформе и что для вас значит взаимопомощь."}
-              </p>
-              <div className="mt-5 w-fit rounded-[22px] bg-white/10 px-5 py-4 ring-1 ring-white/15">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">статус участника</p>
-                <p className="mt-2 text-xl font-semibold">{level}</p>
-              </div>
+    <section className="mx-auto max-w-6xl space-y-10 pb-10">
+      <header className="bg-stone-950 p-6 text-white md:p-8">
+        <div className="grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+          <ProfileAvatar name={displayName} username={user.username} avatarUrl={profileForm.avatar_url || user.avatar_url} />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">ваш профиль</p>
+            <h1 className="mt-3 break-words text-4xl font-semibold tracking-tight [overflow-wrap:anywhere] md:text-5xl">{displayName}</h1>
+            <p className="mt-2 break-words text-lg font-medium text-stone-300 [overflow-wrap:anywhere]">@{user.username}</p>
+            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm text-stone-200">
+              {user.is_verified ? <span className="font-semibold text-emerald-200">Email подтверждён</span> : null}
+              <span>С нами с {formatMonth(user.created_at)}</span>
+              {user.city ? <span className="break-words [overflow-wrap:anywhere]">{user.city}</span> : null}
             </div>
+            <p className="mt-5 max-w-2xl break-words text-base leading-7 text-stone-100 [overflow-wrap:anywhere]">
+              {user.bio || "Расскажите немного о себе: чем занимаетесь, почему вы на платформе и что для вас значит взаимопомощь."}
+            </p>
+            <Link href={`/u/${user.username}`} className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-emerald-200 underline decoration-emerald-200/30 underline-offset-4 hover:decoration-emerald-200">
+              Посмотреть публичный профиль →
+            </Link>
           </div>
+        </div>
+      </header>
 
-          <form onSubmit={handleProfileSubmit} className="rounded-[26px] bg-white p-5 text-stone-950 shadow-[0_18px_55px_rgba(0,0,0,0.18)]">
+      <details className="group border-b border-stone-200">
+        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 [&::-webkit-details-marker]:hidden">
+          <span>
+            <span className="block font-semibold text-stone-950">Редактировать профиль</span>
+            <span className="mt-0.5 block text-sm text-stone-500">Имя, фотография, город и описание</span>
+          </span>
+          <span className="text-xl text-stone-400 transition group-open:rotate-45" aria-hidden="true">+</span>
+        </summary>
+        <form onSubmit={handleProfileSubmit} className="max-w-4xl pb-8 pt-3 text-stone-950">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">редактирование</p>
-                <h2 className="mt-1 text-xl font-semibold">О себе</h2>
+                <h2 className="text-xl font-semibold">Личные данные</h2>
+                <p className="mt-1 text-sm text-stone-500">Эти данные будут видны в вашем публичном профиле.</p>
               </div>
-              <label className="cursor-pointer rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-800 transition hover:bg-emerald-50 hover:text-emerald-800">
-                {isAvatarUploading ? "Загрузка..." : "Фото"}
+              <label className="flex min-h-11 cursor-pointer items-center rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-800 transition hover:bg-emerald-50 hover:text-emerald-800">
+                {isAvatarUploading ? "Загрузка..." : "Изменить фото"}
                 <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarChange} disabled={isAvatarUploading || isProfileSaving} />
               </label>
             </div>
@@ -183,22 +192,21 @@ export default function ProfilePage() {
                 onChange={(event) => setProfileForm((current) => ({ ...current, bio: event.target.value }))}
                 maxLength={250}
                 rows={4}
-                className="mt-2 w-full resize-none rounded-2xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                className="mt-2 w-full resize-none rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
               />
             </label>
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-xs text-stone-500">{profileForm.bio.length}/250</span>
-              <button className="rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60" disabled={isProfileSaving || isAvatarUploading} type="submit">
+              <button className="min-h-12 w-full rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-wait disabled:opacity-60 sm:w-auto" disabled={isProfileSaving || isAvatarUploading} type="submit">
                 {isProfileSaving ? "Сохраняем..." : "Сохранить профиль"}
               </button>
             </div>
             {profileStatus ? <p className="mt-3 text-sm leading-6 text-stone-600">{profileStatus}</p> : null}
-          </form>
-        </div>
-      </header>
+        </form>
+      </details>
 
       {!user.is_verified ? (
-        <section className="rounded-[26px] border border-amber-100 bg-amber-50 p-5 shadow-sm">
+        <section className="border-y border-amber-200 bg-amber-50/60 py-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-amber-950">Подтвердите адрес электронной почты.</h2>
@@ -217,79 +225,45 @@ export default function ProfilePage() {
         </section>
       ) : null}
 
-      <ParticipationCard progress={summary} compact />
+      <section aria-labelledby="profile-reputation-title" className="grid gap-8 border-y border-stone-200 py-8 lg:grid-cols-[0.8fr_1.2fr]">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">репутация участника</p>
+          <h2 id="profile-reputation-title" className="mt-2 text-3xl font-semibold tracking-[-0.025em] text-stone-950">Факты о помощи</h2>
+          <p className="mt-3 max-w-md text-sm leading-6 text-stone-600">Подтверждённые действия важнее декоративных статусов.</p>
+        </div>
+        <div>
+          <Reputation summary={summary} level={level} />
+        </div>
+      </section>
 
-      <CommunityImpact summary={summary} impact={impact} />
+      <Achievements achievements={achievements} />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)]">
-        <div className="space-y-5">
-          <CommunityContribution summary={summary} />
+      <section aria-labelledby="participation-history-title">
+        <h2 id="participation-history-title" className="text-3xl font-semibold tracking-[-0.025em] text-stone-950">История участия</h2>
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <ParticipationHistory contributions={summary.recent_contributions} />
           <ParticipantJourney timeline={summary.timeline} />
         </div>
-        <div className="space-y-5">
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <RecentActivity summary={summary} />
-          <MyLevel impact={impact} />
-          <ContributionOverview impact={impact} achievementsCount={achievements.length} />
           <PatronCircle impact={impact} />
-          <Achievements achievements={achievements} />
-          <Reputation summary={summary} level={level} />
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-function CommunityImpact({ summary, impact }: { summary: ProfileSummary; impact: ProfileImpact }) {
-  const hasImpact = summary.confirmed_contributions_count > 0;
-
-  return (
-    <section className="overflow-hidden rounded-[30px] bg-[linear-gradient(135deg,#064e3b,#047857_62%,#65a30d)] p-6 text-white shadow-[0_22px_70px_rgba(6,78,59,0.24)] md:p-7">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">след в сообществе</p>
-      <div className="mt-3 grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-        <div>
-          <h2 className="text-2xl font-semibold md:text-3xl">
-            {hasImpact ? `Вы участвовали в поддержке ${pluralize(summary.supported_campaigns_count, "истории", "историй", "историй")}` : "Ваш след в сообществе появится после первого вклада"}
-          </h2>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-emerald-50">
-            {hasImpact ? `Вы участвовали в поддержке историй, которые вместе собрали ${formatMoney(summary.supported_campaigns_current_amount)}.` : "После первой поддержки здесь появится профиль влияния: истории, вклад и место среди участников."}
-          </p>
-        </div>
-        {hasImpact ? <div className="rounded-[22px] bg-white/12 px-5 py-4 ring-1 ring-white/20">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-100">сейчас в этих сборах</p>
-          <p className="mt-2 text-3xl font-semibold">{formatMoney(summary.supported_campaigns_current_amount)}</p>
-          <p className="mt-1 text-xs leading-5 text-emerald-100">собрано всеми участниками</p>
-        </div> : null}
-      </div>
-      {hasImpact ? <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <ImpactMetric label="Поддержано сборов" value={String(summary.supported_campaigns_count)} />
-        <ImpactMetric label="Ваших вкладов" value={String(summary.confirmed_contributions_count)} />
-        <ImpactMetric label="Направлено вами" value={formatMoney(summary.total_donated_amount)} />
-        <ImpactMetric label="Последняя поддержка" value={summary.last_contribution_at ? relativeTime(summary.last_contribution_at) : "пока не было"} />
-      </div> : null}
-    </section>
-  );
-}
-
-function ImpactMetric({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-[18px] bg-white/10 px-4 py-3 ring-1 ring-white/15"><p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-100">{label}</p><p className="mt-2 text-lg font-semibold">{value}</p></div>;
-}
-
-function CommunityContribution({ summary }: { summary: ProfileSummary }) {
-  const hasImpact = summary.confirmed_contributions_count > 0;
-  const metrics = [
-    ["Подтвержденных вкладов", String(summary.confirmed_contributions_count)],
-    ["Поддержано сборов", String(summary.supported_campaigns_count)],
-    ["Пожертвовано", formatMoney(summary.total_donated_amount)],
-    ["Последний вклад", summary.last_contribution_at ? relativeTime(summary.last_contribution_at) : "пока не было"],
-  ];
-  return (
-    <section className="rounded-[28px] border border-stone-200 bg-white p-6 shadow-[0_18px_55px_rgba(28,25,23,0.07)]">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">ваш вклад в сообщество</p>
-      <h2 className="mt-2 text-2xl font-semibold text-stone-950">Поддержка, которая уже стала частью платформы</h2>
-      {hasImpact ? <div className="mt-5 grid grid-cols-2 gap-3">
-        {metrics.map(([label, value]) => <div key={label} className="rounded-[20px] bg-stone-50 p-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-400">{label}</p><p className="mt-2 text-xl font-semibold text-stone-950">{value}</p></div>)}
-      </div> : <p className="mt-4 rounded-2xl bg-stone-50 px-4 py-5 text-sm leading-6 text-stone-600">Профиль влияния появится после первой поддержки. Здесь не будет пустой статистики ради статистики.</p>}
+      <section aria-labelledby="created-campaigns-title" className="border-t border-stone-200 pt-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">созданные сборы</p>
+        <h2 id="created-campaigns-title" className="mt-2 text-3xl font-semibold tracking-[-0.025em] text-stone-950">Ваши истории</h2>
+        {createdCampaigns.length ? (
+          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {createdCampaigns.map((campaign) => <CampaignCard key={campaign.id} campaign={campaign} />)}
+          </div>
+        ) : (
+          <div className="mt-5 border-y border-stone-200 py-6">
+            <p className="text-sm leading-6 text-stone-600">Вы пока не создавали сборов. Сначала поддержите другие истории — возможность рассказать свою откроется после выполнения условий участия.</p>
+            {summary.can_create_campaign ? <Link href="/campaigns/new" className="mt-4 inline-flex min-h-11 items-center font-semibold text-emerald-800 hover:text-emerald-950">Открыть сбор →</Link> : null}
+          </div>
+        )}
+      </section>
     </section>
   );
 }
@@ -297,7 +271,7 @@ function CommunityContribution({ summary }: { summary: ProfileSummary }) {
 function RecentActivity({ summary }: { summary: ProfileSummary }) {
   const hasRecentActivity = summary.contributions_last_30_days > 0;
   return (
-    <section className="rounded-[28px] border border-lime-100 bg-lime-50/70 p-6 shadow-[0_18px_55px_rgba(28,25,23,0.06)]">
+    <section className="border-t border-stone-200 pt-6">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-lime-800">последние 30 дней</p>
       <h2 className="mt-2 text-xl font-semibold text-stone-950">{hasRecentActivity ? "Поддержка продолжается" : "Спокойный период"}</h2>
       {hasRecentActivity ? (
@@ -312,33 +286,12 @@ function RecentActivity({ summary }: { summary: ProfileSummary }) {
 }
 
 function SmallMetric({ value, label, prefix = "" }: { value: number; label: string; prefix?: string }) {
-  return <div className="rounded-2xl bg-white px-3 py-3 text-center shadow-sm"><p className="text-xl font-semibold text-stone-950">{prefix}{value}</p><p className="mt-1 text-[11px] uppercase tracking-wide text-stone-500">{label}</p></div>;
-}
-
-function MyLevel({ impact }: { impact: ProfileImpact }) {
-  return (
-    <section className="rounded-[28px] border border-stone-200 bg-white p-6 shadow-[0_18px_55px_rgba(28,25,23,0.07)]">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">мой уровень</p>
-      <h2 className="mt-2 text-xl font-semibold text-stone-950">{impact.current_level ?? "Путь помощи еще не начался"}</h2>
-      <p className="mt-3 text-sm leading-6 text-stone-600">
-        {impact.next_level ? `${impact.confirmed_contributions_count} из ${nextLevelThreshold(impact.next_level)} вкладов до уровня «${impact.next_level}».` : "Вы достигли верхнего уровня участия."}
-      </p>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-stone-100">
-        <div className="h-full rounded-full bg-emerald-600" style={{ width: `${impact.progress_percent}%` }} />
-      </div>
-      <p className="mt-3 text-sm text-stone-500">{impact.confirmed_contributions_count} подтвержденных вкладов</p>
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        <SmallMetric value={impact.completed_supported_campaigns} label="завершены" />
-        <SmallMetric value={impact.active_supported_campaigns} label="в процессе" />
-        <SmallMetric value={impact.fundraising_supported_campaigns} label="собирают" />
-      </div>
-    </section>
-  );
+  return <div className="border-l border-stone-200 px-3 py-2"><p className="text-xl font-semibold text-stone-950">{prefix}{value}</p><p className="mt-1 text-[11px] uppercase tracking-wide text-stone-500">{label}</p></div>;
 }
 
 function ParticipantJourney({ timeline }: { timeline: ProfileSummary["timeline"] }) {
   return (
-    <section className="rounded-[28px] border border-stone-200 bg-white p-6 shadow-[0_18px_55px_rgba(28,25,23,0.07)]">
+    <section className="border-t border-stone-200 pt-6">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">путь участника</p>
       <h2 className="mt-2 text-xl font-semibold text-stone-950">Как рос ваш вклад</h2>
       <div className="mt-5 space-y-0">
@@ -361,7 +314,7 @@ function ParticipationHistory({ contributions }: { contributions: ProfileSummary
       <h2 className="mt-2 text-xl font-semibold text-stone-950">Последние действия</h2>
       <div className="mt-5 space-y-2">
         {contributions.length ? contributions.map((contribution) => (
-          <Link href={`/campaigns/${contribution.campaign_id}`} key={contribution.id} className="flex items-center justify-between gap-3 rounded-2xl bg-stone-50 px-4 py-3 transition hover:bg-emerald-50">
+          <Link href={`/campaigns/${contribution.campaign_id}`} key={contribution.id} className="flex items-center justify-between gap-3 border-b border-stone-100 py-3 transition hover:text-emerald-800">
             <span className="min-w-0"><span className="block truncate text-sm font-semibold text-stone-800">Поддержал сбор «{contribution.campaign_title}»</span><span className="mt-1 block text-xs text-stone-400">{relativeTime(contribution.created_at)}</span></span>
             <strong className="shrink-0 text-sm text-emerald-700">+{formatMoney(contribution.amount)}</strong>
           </Link>
@@ -371,26 +324,11 @@ function ParticipationHistory({ contributions }: { contributions: ProfileSummary
   );
 }
 
-function ContributionOverview({ impact, achievementsCount }: { impact: ProfileImpact; achievementsCount: number }) {
-  return (
-    <section className="rounded-[28px] border border-stone-200 bg-white p-6 shadow-[0_18px_55px_rgba(28,25,23,0.07)]">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">вклад в сообщество</p>
-      <h2 className="mt-2 text-xl font-semibold text-stone-950">История постоянной помощи</h2>
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <SmallMetric value={impact.confirmed_contributions_count} label="вкладов" />
-        <SmallMetric value={impact.supported_campaigns_count} label="историй" />
-        <SmallMetric value={impact.completed_supported_campaigns} label="завершены" />
-        <SmallMetric value={achievementsCount} label="достижений" />
-      </div>
-    </section>
-  );
-}
-
 function PatronCircle({ impact }: { impact: ProfileImpact }) {
   if (!impact.is_patron) return null;
 
   return (
-    <section className="rounded-[28px] border border-emerald-100 bg-white p-6 shadow-[0_18px_55px_rgba(28,25,23,0.07)]">
+    <section className="border-t border-stone-200 pt-6">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">круг меценатов</p>
       <h2 className="mt-2 text-xl font-semibold text-stone-950">Круг меценатов</h2>
       <p className="mt-3 text-sm leading-6 text-stone-600">Спасибо за вклад в развитие сообщества.</p>
@@ -404,13 +342,13 @@ function PatronCircle({ impact }: { impact: ProfileImpact }) {
 
 function Achievements({ achievements }: { achievements: UserAchievement[] }) {
   return (
-    <section id="achievements" className="scroll-mt-24 rounded-[28px] border border-stone-200 bg-white p-6 shadow-[0_18px_55px_rgba(28,25,23,0.07)]">
+    <section id="achievements" className="scroll-mt-24 border-b border-stone-200 pb-10">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">достижения</p>
       <h2 className="mt-2 text-xl font-semibold text-stone-950">Ваши отметки участия</h2>
       <div className="mt-5 space-y-2">
         {achievements.length ? achievements.map((achievement) => (
-          <div key={achievement.code} className="flex gap-3 rounded-2xl bg-amber-50/70 px-4 py-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-lg shadow-sm" aria-hidden="true">★</span>
+          <div key={achievement.code} className="flex gap-3 border-l-2 border-amber-400 bg-amber-50/60 px-4 py-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center text-lg" aria-hidden="true">★</span>
             <span>
               <strong className="block text-sm text-stone-900">{achievement.title}</strong>
               <span className="mt-1 block text-xs leading-5 text-stone-500">{achievement.description}</span>
@@ -425,13 +363,14 @@ function Achievements({ achievements }: { achievements: UserAchievement[] }) {
 
 function Reputation({ summary, level }: { summary: ProfileSummary; level: string }) {
   return (
-    <section className="rounded-[28px] border border-emerald-100 bg-[linear-gradient(145deg,#ffffff,#ecfdf5)] p-6 shadow-[0_18px_55px_rgba(28,25,23,0.07)]">
+    <section className="border-t border-stone-200 pt-6">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">репутация</p>
       <h2 className="mt-2 text-xl font-semibold text-stone-950">Статус в сообществе</h2>
-      <div className="mt-5 divide-y divide-emerald-100">
-        {summary.confirmed_contributions_count === 0 ? <ReputationRow label="История участия еще не началась" value="" /> : <ReputationRow label="Подтвержденных вкладов" value={String(summary.confirmed_contributions_count)} />}
+      <div className="mt-5 divide-y divide-stone-200">
+        {summary.confirmed_contributions_count === 0 ? <ReputationRow label="История участия ещё не началась" value="" /> : <ReputationRow label="Подтверждённых вкладов" value={String(summary.confirmed_contributions_count)} />}
+        <ReputationRow label="Поддержано историй" value={String(summary.supported_campaigns_count)} />
         <ReputationRow label="Уровень участия" value={level} />
-        <ReputationRow label="Создание сборов" value={summary.can_create_campaign ? "Открыто" : "Пока закрыто"} />
+        <ReputationRow label={`Создание сборов · порог ${summary.required_contributions_count}`} value={summary.can_create_campaign ? "Доступно" : `${summary.confirmed_contributions_count} из ${summary.required_contributions_count}`} />
       </div>
     </section>
   );
@@ -454,27 +393,12 @@ function formatMonth(value: string) {
   return new Intl.DateTimeFormat("ru-RU", { month: "long", year: "numeric" }).format(new Date(value));
 }
 
-function nextLevelThreshold(level: string) {
-  if (level === "Помощник") return 1;
-  if (level === "Участник") return 5;
-  if (level === "Наставник") return 20;
-  if (level === "Меценат") return 50;
-  return 100;
-}
-
-function pluralize(value: number, one: string, few: string, many: string) {
-  const mod10 = value % 10;
-  const mod100 = value % 100;
-  const word = mod10 === 1 && mod100 !== 11 ? one : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? few : many;
-  return `${value} ${word}`;
-}
-
 function ProfileAvatar({ name, username, avatarUrl }: { name: string; username: string; avatarUrl?: string | null }) {
   if (avatarUrl) {
     return (
       <div
         aria-label={`Фото пользователя ${name}`}
-        className="h-28 w-28 rounded-full bg-cover bg-center shadow-[0_18px_50px_rgba(0,0,0,0.28)] ring-4 ring-white/15 md:h-32 md:w-32"
+        className="h-24 w-24 rounded-full bg-cover bg-center ring-2 ring-white/20 sm:h-28 sm:w-28 md:h-32 md:w-32"
         style={{ backgroundImage: `url(${avatarUrl})` }}
       />
     );
@@ -483,7 +407,7 @@ function ProfileAvatar({ name, username, avatarUrl }: { name: string; username: 
   return (
     <div
       aria-label={`Аватар пользователя ${username}`}
-      className="flex h-28 w-28 items-center justify-center rounded-full bg-[linear-gradient(135deg,#bbf7d0,#6ee7b7_45%,#fef3c7)] text-4xl font-semibold text-stone-950 shadow-[0_18px_50px_rgba(0,0,0,0.22)] ring-4 ring-white/15 md:h-32 md:w-32"
+      className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-200 text-4xl font-semibold text-emerald-950 ring-2 ring-white/20 sm:h-28 sm:w-28 md:h-32 md:w-32"
     >
       {(name || username).slice(0, 1).toUpperCase()}
     </div>
@@ -498,7 +422,7 @@ function ProfileInput({ label, value, onChange, maxLength }: { label: string; va
         value={value}
         onChange={(event) => onChange(event.target.value)}
         maxLength={maxLength}
-        className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+        className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
       />
     </label>
   );
@@ -519,9 +443,9 @@ function syncAuthUser(user: AuthUser) {
 }
 
 function LoadingCard() {
-  return <div className="rounded-[28px] border border-stone-200 bg-white p-5 text-stone-600 shadow-sm">Загружаем профиль...</div>;
+  return <div className="border-y border-stone-200 py-6 text-stone-600">Загружаем профиль...</div>;
 }
 
 function ProfileError({ message }: { message: string }) {
-  return <div className="rounded-[24px] border border-rose-100 bg-rose-50 px-5 py-4 text-sm leading-6 text-rose-800">{message}</div>;
+  return <div className="border-y border-rose-200 bg-rose-50/60 py-5 text-sm leading-6 text-rose-800">{message}</div>;
 }

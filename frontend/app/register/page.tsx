@@ -39,19 +39,19 @@ export default function RegisterPage() {
   }
 
   return (
-    <section className="mx-auto max-w-xl space-y-6">
-      <div className="rounded-[24px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:rounded-[32px] md:p-10">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-emerald-300">новый профиль</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-5xl">Создать аккаунт</h1>
-        <p className="mt-4 leading-7 text-stone-300">Имя пользователя: 3-24 символа, латиница, цифры и подчеркивание.</p>
-      </div>
+    <section className="mx-auto max-w-xl space-y-8 py-4 md:py-8">
+      <header className="border-b border-stone-200 pb-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">новый профиль</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-5xl">Создать аккаунт</h1>
+        <p className="mt-4 leading-7 text-stone-600">Имя пользователя: 3–24 символа, латиница, цифры и подчёркивание.</p>
+      </header>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-[24px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)] md:rounded-[28px]">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <label className="block text-sm font-medium text-stone-700">
           Эл. почта
           <input
             aria-describedby="email-help"
-            className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:bg-white"
+            className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
             pattern={EMAIL_PATTERN}
             title={EMAIL_HINT}
             type="email"
@@ -65,7 +65,7 @@ export default function RegisterPage() {
           Имя пользователя
           <input
             aria-describedby="username-help"
-            className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:bg-white"
+            className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
             minLength={3}
             maxLength={24}
             pattern={USERNAME_PATTERN}
@@ -81,7 +81,7 @@ export default function RegisterPage() {
           <input
             id="password"
             aria-describedby="password-help"
-            className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:bg-white"
+            className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
             minLength={8}
             type="password"
             value={password}
@@ -95,7 +95,7 @@ export default function RegisterPage() {
           <input
             id="confirm-password"
             aria-describedby={confirmPassword ? "confirm-password-status" : undefined}
-            className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:bg-white"
+            className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
             minLength={8}
             type="password"
             value={confirmPassword}

@@ -182,7 +182,7 @@ export default function NewCampaignPage() {
   }
 
   if (isLoading || !isAuthenticated || isProgressLoading) {
-    return <div className="rounded-[28px] border border-stone-200 bg-white p-5 text-stone-600 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">Загружаем...</div>;
+    return <div className="border-y border-stone-200 py-6 text-stone-600">Загружаем...</div>;
   }
 
   if (!contributionProgress?.can_create_campaign) {
@@ -190,17 +190,17 @@ export default function NewCampaignPage() {
 
     return (
       <section className="mx-auto max-w-3xl space-y-6">
-        <div className="rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:p-10">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-emerald-300">сбор пока закрыт</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-5xl">
+        <header className="border-b border-stone-200 pb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">сбор пока закрыт</p>
+          <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-5xl">
             {hasUnfinishedCampaign ? "Сначала завершите текущую историю." : "Поддержите 5 других сборов, чтобы открыть свой."}
           </h1>
-          <p className="mt-4 max-w-2xl leading-7 text-stone-300">
+          <p className="mt-4 max-w-2xl leading-7 text-stone-600">
             {hasUnfinishedCampaign
               ? "Новый сбор станет доступен после завершения активной истории и публикации итогового отчета."
               : "Подтвержденные вклады от 100 ₽ засчитываются автоматически, включая анонимные, если вы привяжете их после регистрации."}
           </p>
-        </div>
+        </header>
 
         <div className="space-y-4">
           {contributionProgress ? <ParticipationCard progress={contributionProgress} /> : null}
@@ -216,13 +216,13 @@ export default function NewCampaignPage() {
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
-      <div className="rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:p-10">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-emerald-300">новый сбор</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-5xl">Открыть сбор</h1>
-        <span className="mt-4 inline-flex rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-900">Создание сборов доступно</span>
-      </div>
+      <header className="border-b border-stone-200 pb-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">новая история</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-5xl">Открыть сбор</h1>
+        <p className="mt-4 text-sm font-medium text-emerald-800">Создание сборов доступно</p>
+      </header>
 
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
+      <form onSubmit={handleSubmit} className="space-y-8">
         <div className="space-y-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-stone-400">история</p>
@@ -232,7 +232,7 @@ export default function NewCampaignPage() {
           <label className="block text-sm font-medium text-stone-700">
             Название
             <input
-              className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition placeholder:text-stone-400 focus:border-emerald-500 focus:bg-white"
+              className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition placeholder:text-stone-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
               minLength={CAMPAIGN_TITLE_MIN_LENGTH}
               maxLength={CAMPAIGN_TITLE_MAX_LENGTH}
               value={title}
@@ -248,7 +248,7 @@ export default function NewCampaignPage() {
           <label className="block text-sm font-medium text-stone-700">
             Описание
             <textarea
-              className="mt-2 min-h-56 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-4 leading-7 outline-none transition placeholder:whitespace-pre-line placeholder:text-stone-400 focus:border-emerald-500 focus:bg-white"
+              className="mt-2 min-h-56 w-full rounded-xl border border-stone-300 bg-white px-4 py-4 leading-7 outline-none transition placeholder:whitespace-pre-line placeholder:text-stone-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
               minLength={CAMPAIGN_DESCRIPTION_MIN_LENGTH}
               maxLength={CAMPAIGN_DESCRIPTION_MAX_LENGTH}
               placeholder={descriptionPlaceholder}
@@ -266,7 +266,7 @@ export default function NewCampaignPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block text-sm font-medium text-stone-700">
             Цель
-            <input className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:bg-white" min="1" step="0.01" type="number" value={targetAmount} onChange={(event) => setTargetAmount(event.target.value)} required />
+            <input className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" min="1" step="0.01" type="number" value={targetAmount} onChange={(event) => setTargetAmount(event.target.value)} required />
             {isLargeTargetAmount ? (
               <span className="mt-2 block rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs font-normal leading-5 text-amber-800">
                 Крупные сборы проходят ручную проверку перед публикацией.
@@ -276,7 +276,7 @@ export default function NewCampaignPage() {
 
           <label className="block text-sm font-medium text-stone-700">
             Категория
-            <select className="mt-2 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:bg-white" value={category} onChange={(event) => setCategory(event.target.value as CampaignCategory)}>
+            <select className="mt-2 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" value={category} onChange={(event) => setCategory(event.target.value as CampaignCategory)}>
               {categories.map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.label}
@@ -293,7 +293,7 @@ export default function NewCampaignPage() {
           </div>
 
           <label
-            className="flex cursor-pointer flex-col items-center justify-center rounded-[24px] border border-dashed border-stone-300 bg-stone-50 px-5 py-8 text-center transition hover:border-emerald-400 hover:bg-emerald-50/40"
+            className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-white px-5 py-8 text-center transition hover:border-emerald-500"
             onDragOver={(event) => event.preventDefault()}
             onDrop={handleCoverDrop}
           >
@@ -319,7 +319,7 @@ export default function NewCampaignPage() {
           ) : null}
         </div>
 
-        <div className="space-y-3 rounded-[24px] border border-stone-200 bg-stone-50 p-4">
+        <div className="space-y-3 border-y border-stone-200 py-6">
           <div>
             <p className="text-sm font-semibold text-stone-800">Подтверждающие материалы (необязательно)</p>
             <p className="mt-1 text-sm leading-6 text-stone-500">Документы помогают вызвать больше доверия к сбору.</p>

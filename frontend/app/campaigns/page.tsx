@@ -15,21 +15,21 @@ export default async function CampaignsPage({
   const campaigns = await fetchCampaigns({ page, sort, q: query });
 
   return (
-    <section className="space-y-8">
-      <div className="rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:p-10">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-emerald-300">сборы</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-5xl">Открытые сборы</h1>
-        <p className="mt-4 max-w-2xl leading-7 text-stone-300">Выберите цель и посмотрите, как идет поддержка.</p>
-      </div>
+    <section className="space-y-10 pb-10">
+      <header className="max-w-3xl border-b border-stone-200 pb-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">открытые истории</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-6xl">Кому сейчас нужна помощь</h1>
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-stone-600">Выберите историю, узнайте человека и посмотрите, как движется его цель.</p>
+      </header>
 
-      <div className="flex flex-col gap-4 rounded-[24px] border border-stone-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <form action="/campaigns" className="flex flex-1 gap-2">
           <input
             type="search"
             name="q"
             defaultValue={query}
             placeholder="Поиск по названию, описанию или автору"
-            className="min-w-0 flex-1 rounded-full border border-stone-200 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+            className="min-w-0 flex-1 rounded-xl border border-stone-300 bg-white px-4 py-3 outline-none transition focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100"
           />
           <button type="submit" className="rounded-full bg-stone-950 px-5 py-3 font-semibold text-white transition hover:bg-emerald-800">
             Найти

@@ -26,30 +26,30 @@ export default async function PublicProfilePage({ params }: { params: { username
   ];
 
   return (
-    <section className="space-y-8">
-      <div className="overflow-hidden rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:p-10">
+    <section className="space-y-12 pb-10">
+      <header className="bg-stone-950 p-6 text-white md:p-10">
         <div className="grid gap-6 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
           <ProfileAvatar name={displayName} username={profile.username} avatarUrl={profile.avatar_url} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="min-w-0 text-3xl font-semibold tracking-tight md:text-5xl">{displayName}</h1>
-              {profile.is_verified ? <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-900">Проверенный пользователь</span> : null}
+              <h1 className="min-w-0 break-words text-3xl font-semibold tracking-tight [overflow-wrap:anywhere] md:text-5xl">{displayName}</h1>
+              {profile.is_verified ? <span className="border-l border-emerald-300 pl-3 text-xs font-semibold text-emerald-200">Проверенный пользователь</span> : null}
             </div>
-            <p className="mt-2 text-lg font-medium text-stone-300">@{profile.username}</p>
+            <p className="mt-2 break-words text-lg font-medium text-stone-300 [overflow-wrap:anywhere]">@{profile.username}</p>
             <div className="mt-4 flex flex-wrap gap-2 text-sm text-stone-200">
-              <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10">С нами с {formatProfileMonth(profile.created_at)}</span>
-              {profile.city ? <span className="rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10">{profile.city}</span> : null}
+              <span>С нами с {formatProfileMonth(profile.created_at)}</span>
+              {profile.city ? <span className="break-words [overflow-wrap:anywhere]">· {profile.city}</span> : null}
             </div>
             {profile.bio ? (
-              <p className="mt-5 max-w-3xl text-lg leading-8 text-stone-100">&ldquo;{profile.bio}&rdquo;</p>
+              <p className="mt-5 max-w-3xl break-words text-lg leading-8 text-stone-100 [overflow-wrap:anywhere]">&ldquo;{profile.bio}&rdquo;</p>
             ) : (
               <p className="mt-5 max-w-3xl text-sm leading-6 text-stone-300">Пользователь пока не добавил описание, но его участие и созданные сборы уже видны ниже.</p>
             )}
           </div>
         </div>
-      </div>
+      </header>
 
-      <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
+      <section className="overflow-hidden border-y border-stone-200 bg-white">
         <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
           <div className="p-5 md:p-7">
             <p className="text-sm uppercase tracking-[0.16em] text-stone-400">репутация автора</p>
@@ -90,7 +90,7 @@ export default async function PublicProfilePage({ params }: { params: { username
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
+      <section className="border-b border-stone-200 pb-10">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-[0.16em] text-stone-400">достижения</p>
@@ -100,7 +100,7 @@ export default async function PublicProfilePage({ params }: { params: { username
         {profile.achievements.length ? (
           <div className="mt-4 flex flex-wrap gap-2">
             {profile.achievements.map((achievement) => (
-              <span key={achievement} className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-100">
+              <span key={achievement} className="border-l-2 border-emerald-500 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800">
                 {achievementLabel(achievement)}
               </span>
             ))}
@@ -119,7 +119,7 @@ export default async function PublicProfilePage({ params }: { params: { username
             ))}
           </div>
         ) : (
-          <div className="mt-5 rounded-[28px] border border-stone-200 bg-white p-5 text-stone-600 shadow-[0_18px_60px_rgba(28,25,23,0.08)]">
+          <div className="mt-5 border-y border-stone-200 py-6 text-stone-600">
             Этот участник пока не открывал сбор, но каждая поддержка всё равно укрепляет сообщество.
           </div>
         )}
@@ -133,7 +133,7 @@ function ProfileAvatar({ name, username, avatarUrl }: { name: string; username: 
     return (
       <div
         aria-label={`Фото пользователя ${name}`}
-        className="h-28 w-28 rounded-full bg-cover bg-center shadow-[0_18px_50px_rgba(0,0,0,0.28)] ring-4 ring-white/15 md:h-36 md:w-36"
+        className="h-28 w-28 rounded-full bg-cover bg-center ring-2 ring-white/20 md:h-36 md:w-36"
         style={{ backgroundImage: `url(${avatarUrl})` }}
       />
     );
@@ -142,7 +142,7 @@ function ProfileAvatar({ name, username, avatarUrl }: { name: string; username: 
   return (
     <div
       aria-label={`Аватар пользователя ${username}`}
-      className="flex h-28 w-28 items-center justify-center rounded-full bg-[linear-gradient(135deg,#bbf7d0,#6ee7b7_45%,#fef3c7)] text-4xl font-semibold text-stone-950 shadow-[0_18px_50px_rgba(0,0,0,0.22)] ring-4 ring-white/15 md:h-36 md:w-36 md:text-5xl"
+      className="flex h-28 w-28 items-center justify-center rounded-full bg-emerald-200 text-4xl font-semibold text-emerald-950 ring-2 ring-white/20 md:h-36 md:w-36 md:text-5xl"
     >
       {initialsFor(name, username)}
     </div>

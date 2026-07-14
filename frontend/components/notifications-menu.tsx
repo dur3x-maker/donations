@@ -89,7 +89,7 @@ export function NotificationsMenu() {
         onClick={toggleMenu}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
-        className="relative rounded-full px-4 py-2 font-medium text-stone-600 transition hover:bg-white hover:text-stone-950"
+        className="relative flex min-h-11 items-center rounded-full px-4 py-2 font-medium text-stone-300 transition hover:bg-white/10 hover:text-white"
         type="button"
       >
         Новости

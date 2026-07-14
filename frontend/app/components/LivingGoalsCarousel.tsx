@@ -95,7 +95,7 @@ export function LivingGoalsCarousel({ campaigns: initialCampaigns }: LivingGoals
 
   if (!campaigns.length) {
     return (
-      <div className="rounded-[18px] border border-stone-200 bg-white p-6 text-stone-600 shadow-sm">
+      <div className="border-y border-stone-200 py-6 text-stone-600">
         Первые сборы скоро появятся здесь.
       </div>
     );
@@ -129,7 +129,7 @@ export function LivingGoalsCarousel({ campaigns: initialCampaigns }: LivingGoals
 
       <Link
         href="/campaigns"
-        className="flex min-h-[410px] w-[82vw] max-w-[350px] shrink-0 snap-start flex-col justify-between rounded-[20px] border border-stone-900 bg-stone-950 p-6 text-white shadow-[0_18px_55px_rgba(28,25,23,0.14)] outline-none transition hover:bg-emerald-900 focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[350px] lg:col-span-2 lg:min-h-0 lg:w-auto lg:max-w-none"
+        className="flex min-h-[410px] w-[82vw] max-w-[350px] shrink-0 snap-start flex-col justify-between rounded-[14px] bg-stone-950 p-6 text-white outline-none transition hover:bg-emerald-900 focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[350px] lg:col-span-2 lg:min-h-0 lg:w-auto lg:max-w-none"
       >
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-200">еще истории</p>
@@ -180,15 +180,15 @@ function LivingGoalCard({ campaign, variant }: { campaign: CampaignListItem; var
   return (
     <Link
       href={`/campaigns/${campaign.id}`}
-      className={`group block w-[82vw] max-w-[380px] shrink-0 snap-start overflow-hidden rounded-[20px] border border-stone-200 bg-white shadow-[0_16px_45px_rgba(28,25,23,0.07)] outline-none transition hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_24px_60px_rgba(28,25,23,0.11)] focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[380px] lg:flex lg:h-full lg:w-auto lg:max-w-none lg:flex-col ${variantClass}`}
+      className={`group block w-[82vw] max-w-[380px] shrink-0 snap-start overflow-hidden rounded-[14px] border border-stone-200 bg-white outline-none transition hover:border-emerald-400 focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[380px] lg:flex lg:h-full lg:w-auto lg:max-w-none lg:flex-col ${variantClass}`}
     >
       <div className={`relative aspect-[16/10] overflow-hidden bg-stone-100 ${imageClass}`}>
         {campaign.cover_image_url ? (
           <img src={campaign.cover_image_url} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]" draggable={false} />
         ) : (
-          <div className="h-full w-full bg-[linear-gradient(135deg,#e9ded1_0%,#f8fafc_48%,#bbf7d0_100%)]" />
+          <div className="h-full w-full bg-stone-200" />
         )}
-        <div className="absolute left-3 top-3 rounded-full bg-white/92 px-3 py-1 text-xs font-medium text-stone-700 shadow-sm">
+        <div className="absolute left-3 top-3 bg-white/95 px-3 py-1 text-xs font-medium text-stone-700">
           {categoryLabels[campaign.category] ?? campaign.category}
         </div>
       </div>
@@ -222,15 +222,15 @@ function MainStoryCard({ campaign }: { campaign: CampaignListItem }) {
   return (
     <Link
       href={`/campaigns/${campaign.id}`}
-      className="group relative block min-h-[460px] w-[86vw] max-w-[420px] shrink-0 snap-start overflow-hidden rounded-[24px] bg-stone-950 text-white shadow-[0_24px_70px_rgba(28,25,23,0.18)] outline-none transition hover:-translate-y-0.5 hover:shadow-[0_32px_80px_rgba(28,25,23,0.24)] focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[420px] lg:col-span-2 lg:row-span-2 lg:h-full lg:w-auto lg:max-w-none"
+      className="group relative block min-h-[460px] w-[86vw] max-w-[420px] shrink-0 snap-start overflow-hidden rounded-[18px] bg-stone-950 text-white outline-none transition focus-visible:ring-4 focus-visible:ring-emerald-200 sm:w-[420px] lg:col-span-2 lg:row-span-2 lg:h-full lg:w-auto lg:max-w-none"
     >
       {campaign.cover_image_url ? (
         <img src={campaign.cover_image_url} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]" draggable={false} />
       ) : (
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,#292524_0%,#1c1917_44%,#065f46_100%)]" />
+        <div className="absolute inset-0 bg-stone-800" />
       )}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(28,25,23,0.05)_0%,rgba(28,25,23,0.36)_42%,rgba(28,25,23,0.92)_100%)]" />
-      <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-stone-900 shadow-sm">
+      <div className="absolute left-4 top-4 bg-white/90 px-3 py-1 text-xs font-semibold text-stone-900">
         главная история
       </div>
 
@@ -241,7 +241,7 @@ function MainStoryCard({ campaign }: { campaign: CampaignListItem }) {
         <h3 className="mt-3 max-w-xl text-3xl font-semibold leading-tight text-white md:text-4xl">{campaign.title}</h3>
         <p className="mt-3 line-clamp-2 max-w-lg text-sm leading-6 text-stone-200">{campaign.description_preview}</p>
 
-        <div className="mt-6 rounded-[18px] border border-white/12 bg-white/10 p-4 backdrop-blur">
+        <div className="mt-6 border-t border-white/20 pt-4">
           <div className="mb-3 flex items-end justify-between gap-4">
             <div>
               <p className="text-xs text-stone-300">собрано</p>

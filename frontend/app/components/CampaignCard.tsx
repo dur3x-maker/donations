@@ -23,7 +23,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
   return (
     <Link
       href={`/campaigns/${campaign.id}`}
-      className="group block h-full overflow-hidden rounded-[22px] border border-stone-200 bg-white shadow-sm outline-none transition hover:border-emerald-200 hover:shadow-md focus-visible:ring-4 focus-visible:ring-emerald-200"
+      className="group block h-full overflow-hidden rounded-[14px] border border-stone-200 bg-white outline-none transition hover:border-emerald-400 focus-visible:ring-4 focus-visible:ring-emerald-200"
     >
       <div className="flex h-full flex-col">
         <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
@@ -32,17 +32,17 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
           ) : (
             <div className="h-full w-full bg-[#e9ded1]" />
           )}
-          <div className="absolute left-3 top-3 rounded-full bg-white/92 px-3 py-1 text-xs font-medium text-stone-700 shadow-sm">
+          <div className="absolute left-3 top-3 bg-white/95 px-2.5 py-1 text-xs font-medium text-stone-700">
             {categoryLabels[campaign.category] ?? campaign.category}
           </div>
         </div>
 
         <div className="flex flex-1 flex-col p-5">
-          <h3 className="text-lg font-semibold leading-tight text-stone-950">{campaign.title}</h3>
+          <h3 className="break-words text-xl font-semibold leading-tight tracking-[-0.015em] text-stone-950 [overflow-wrap:anywhere]">{campaign.title}</h3>
           <p className="mt-2 line-clamp-2 text-sm leading-6 text-stone-600">{campaign.description_preview}</p>
 
           <div className="mt-auto pt-5">
-            <div className="mb-2 flex items-end justify-between gap-4">
+            <div className="mb-2 flex items-end justify-between gap-4 border-t border-stone-100 pt-4">
               <div>
                 <p className="text-xs text-stone-400">собрано</p>
                 <p className="text-xl font-semibold text-stone-950">{formatMoney(campaign.current_amount)}</p>

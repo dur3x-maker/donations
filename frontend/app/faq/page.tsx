@@ -109,19 +109,19 @@ const faqItems = [
 export default function FaqPage() {
   return (
     <section className="space-y-8 pb-12">
-      <div className="overflow-hidden rounded-[32px] bg-stone-950 p-6 text-white shadow-[0_24px_80px_rgba(28,25,23,0.20)] md:p-10">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">FAQ</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-5xl">Центр помощи</h1>
-        <p className="mt-4 max-w-3xl leading-7 text-stone-300">
+      <header className="max-w-4xl border-b border-stone-200 pb-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">FAQ</p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-6xl">Центр помощи</h1>
+        <p className="mt-4 max-w-3xl text-lg leading-8 text-stone-600">
           Добро пожаловать в Центр помощи. Здесь мы собрали ответы на самые частые вопросы о работе платформы. Если вы не нашли нужную информацию, свяжитесь с нами через форму обратной связи — мы обязательно поможем.
         </p>
-      </div>
+      </header>
 
       <FaqAccordion items={faqItems} />
 
-      <div className="rounded-[28px] border border-emerald-100 bg-emerald-950 p-6 text-white shadow-sm md:p-8">
-        <h2 className="text-2xl font-semibold md:text-3xl">Не нашли ответ?</h2>
-        <div className="mt-4 max-w-3xl space-y-3 leading-7 text-emerald-50/90">
+      <div className="border-t border-stone-200 pt-8">
+        <h2 className="text-2xl font-semibold text-stone-950 md:text-3xl">Не нашли ответ?</h2>
+        <div className="mt-4 max-w-3xl space-y-3 leading-7 text-stone-600">
           <p>
             Если у вас остались вопросы или возникли сложности при использовании платформы, свяжитесь с нами через <FaqContactLink />.
           </p>

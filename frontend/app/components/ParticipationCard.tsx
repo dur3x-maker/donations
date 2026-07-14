@@ -15,7 +15,7 @@ export function ParticipationCard({ progress, compact = false }: ParticipationCa
   const percent = Math.min(100, Math.round((count / required) * 100));
 
   return (
-    <section className={`rounded-[28px] border border-stone-200 bg-white shadow-[0_18px_55px_rgba(28,25,23,0.07)] ${compact ? "p-5" : "p-6"}`}>
+    <section className={`border-t border-stone-200 ${compact ? "pt-5" : "pt-6"}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">участие</p>
