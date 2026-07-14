@@ -30,7 +30,7 @@ const workSteps = [
 
 export function TrustCultureSection() {
   return (
-    <div className="space-y-10">
+    <div className="mt-16 md:mt-24">
       <section className="relative left-1/2 w-screen -translate-x-1/2 bg-stone-950 px-4 py-14 text-white md:px-8 md:py-16 lg:py-20">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
           <div className="max-w-4xl">
@@ -54,7 +54,7 @@ export function TrustCultureSection() {
         </div>
       </section>
 
-      <section aria-labelledby="how-it-works-title">
+      <section aria-labelledby="how-it-works-title" className="editorial-plane editorial-plane-warm editorial-chapter-compact">
         <div className="grid gap-8 lg:grid-cols-[0.55fr_1.45fr] lg:items-start">
           <div className="max-w-xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">как работает</p>

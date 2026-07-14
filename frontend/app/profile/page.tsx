@@ -135,7 +135,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <section className="mx-auto max-w-6xl space-y-10 pb-10">
+    <section className="mx-auto max-w-6xl pb-12 md:pb-20">
       <header className="bg-stone-950 p-6 text-white md:p-8">
         <div className="grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
           <ProfileAvatar name={displayName} username={user.username} avatarUrl={profileForm.avatar_url || user.avatar_url} />
@@ -158,7 +158,7 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <details className="group border-b border-stone-200">
+      <details className="group mt-5 border-b border-stone-200 md:mt-7">
         <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 [&::-webkit-details-marker]:hidden">
           <span>
             <span className="block font-semibold text-stone-950">Редактировать профиль</span>
@@ -206,7 +206,7 @@ export default function ProfilePage() {
       </details>
 
       {!user.is_verified ? (
-        <section className="border-y border-amber-200 bg-amber-50/60 py-5">
+        <section className="mt-6 border-y border-amber-200 bg-amber-50/60 py-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-amber-950">Подтвердите адрес электронной почты.</h2>
@@ -225,7 +225,7 @@ export default function ProfilePage() {
         </section>
       ) : null}
 
-      <section aria-labelledby="profile-reputation-title" className="grid gap-8 border-y border-stone-200 py-8 lg:grid-cols-[0.8fr_1.2fr]">
+      <section aria-labelledby="profile-reputation-title" className="editorial-plane editorial-plane-white mt-16 grid gap-10 py-14 md:mt-24 md:py-20 lg:grid-cols-[0.8fr_1.2fr]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">репутация участника</p>
           <h2 id="profile-reputation-title" className="mt-2 text-3xl font-semibold tracking-[-0.025em] text-stone-950">Факты о помощи</h2>
@@ -238,7 +238,7 @@ export default function ProfilePage() {
 
       <Achievements achievements={achievements} />
 
-      <section aria-labelledby="participation-history-title">
+      <section aria-labelledby="participation-history-title" className="editorial-plane editorial-plane-warm py-16 md:py-24">
         <h2 id="participation-history-title" className="text-3xl font-semibold tracking-[-0.025em] text-stone-950">История участия</h2>
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <ParticipationHistory contributions={summary.recent_contributions} />
@@ -250,7 +250,7 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      <section aria-labelledby="created-campaigns-title" className="border-t border-stone-200 pt-8">
+      <section aria-labelledby="created-campaigns-title" className="editorial-plane editorial-plane-white py-16 md:py-24">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">созданные сборы</p>
         <h2 id="created-campaigns-title" className="mt-2 text-3xl font-semibold tracking-[-0.025em] text-stone-950">Ваши истории</h2>
         {createdCampaigns.length ? (
@@ -309,7 +309,7 @@ function ParticipantJourney({ timeline }: { timeline: ProfileSummary["timeline"]
 
 function ParticipationHistory({ contributions }: { contributions: ProfileSummary["recent_contributions"] }) {
   return (
-    <section className="rounded-[28px] border border-stone-200 bg-white p-6 shadow-[0_18px_55px_rgba(28,25,23,0.07)]">
+    <section className="border-t border-stone-200 pt-6">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">история участия</p>
       <h2 className="mt-2 text-xl font-semibold text-stone-950">Последние действия</h2>
       <div className="mt-5 space-y-2">
@@ -342,7 +342,7 @@ function PatronCircle({ impact }: { impact: ProfileImpact }) {
 
 function Achievements({ achievements }: { achievements: UserAchievement[] }) {
   return (
-    <section id="achievements" className="scroll-mt-24 border-b border-stone-200 pb-10">
+    <section id="achievements" className="editorial-plane editorial-plane-quiet scroll-mt-24 py-14 md:py-20">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">достижения</p>
       <h2 className="mt-2 text-xl font-semibold text-stone-950">Ваши отметки участия</h2>
       <div className="mt-5 space-y-2">

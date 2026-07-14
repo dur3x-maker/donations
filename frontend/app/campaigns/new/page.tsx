@@ -189,8 +189,8 @@ export default function NewCampaignPage() {
     const hasUnfinishedCampaign = contributionProgress?.has_unfinished_campaign;
 
     return (
-      <section className="mx-auto max-w-3xl space-y-6">
-        <header className="border-b border-stone-200 pb-8">
+      <section className="mx-auto max-w-3xl pb-12 md:pb-20">
+        <header className="pb-4 md:pb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">сбор пока закрыт</p>
           <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-5xl">
             {hasUnfinishedCampaign ? "Сначала завершите текущую историю." : "Поддержите 5 других сборов, чтобы открыть свой."}
@@ -202,7 +202,7 @@ export default function NewCampaignPage() {
           </p>
         </header>
 
-        <div className="space-y-4">
+        <div className="editorial-plane editorial-plane-white mt-12 space-y-4 py-10 md:mt-16 md:py-14">
           {contributionProgress ? <ParticipationCard progress={contributionProgress} /> : null}
           <Link href="/campaigns" className="mt-5 inline-flex rounded-full bg-stone-950 px-5 py-3 font-medium text-white transition hover:bg-emerald-700">
             Смотреть сборы
@@ -215,14 +215,14 @@ export default function NewCampaignPage() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6">
-      <header className="border-b border-stone-200 pb-8">
+    <section className="mx-auto max-w-3xl pb-12 md:pb-20">
+      <header className="pb-4 md:pb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">новая история</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-5xl">Открыть сбор</h1>
         <p className="mt-4 text-sm font-medium text-emerald-800">Создание сборов доступно</p>
       </header>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="mt-12 space-y-8 md:mt-16">
         <div className="space-y-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-stone-400">история</p>

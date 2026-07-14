@@ -14,8 +14,8 @@ export default async function CompletedCampaignsPage({
   const campaigns = await fetchCompletedCampaigns({ page, q: query });
 
   return (
-    <section className="space-y-10 pb-10">
-      <header className="max-w-4xl border-b border-stone-200 pb-8">
+    <section className="pb-12 md:pb-20">
+      <header className="max-w-4xl pb-4 md:pb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">результаты поддержки</p>
         <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-6xl">Истории, где помощь уже дошла</h1>
         <p className="mt-4 max-w-2xl text-lg leading-8 text-stone-600">
@@ -23,7 +23,7 @@ export default async function CompletedCampaignsPage({
         </p>
       </header>
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="editorial-plane editorial-plane-white mt-10 flex flex-col gap-4 py-6 md:mt-14 md:flex-row md:items-center md:justify-between md:py-8">
         <form action="/campaigns/completed" className="flex flex-1 gap-2">
           <input
             type="search"
@@ -42,11 +42,11 @@ export default async function CompletedCampaignsPage({
       </div>
 
       {campaigns.length ? (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-14 grid gap-5 md:mt-20 md:grid-cols-2 xl:grid-cols-3">
           {campaigns.map((campaign) => <CompletedCampaignCard key={campaign.id} campaign={campaign} />)}
         </div>
       ) : (
-        <div className="border-y border-stone-200 py-10 text-center">
+        <div className="editorial-plane editorial-plane-quiet mt-14 py-12 text-center md:mt-20 md:py-16">
           <h2 className="text-xl font-semibold text-stone-950">
             {query ? "По вашему запросу историй не найдено" : "Завершённые истории скоро появятся"}
           </h2>

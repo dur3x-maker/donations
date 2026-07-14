@@ -26,7 +26,7 @@ export default async function PublicProfilePage({ params }: { params: { username
   ];
 
   return (
-    <section className="space-y-12 pb-10">
+    <section className="pb-12 md:pb-20">
       <header className="bg-stone-950 p-6 text-white md:p-10">
         <div className="grid gap-6 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
           <ProfileAvatar name={displayName} username={profile.username} avatarUrl={profile.avatar_url} />
@@ -49,9 +49,9 @@ export default async function PublicProfilePage({ params }: { params: { username
         </div>
       </header>
 
-      <section className="overflow-hidden border-y border-stone-200 bg-white">
+      <section className="editorial-plane editorial-plane-white mt-16 py-14 md:mt-24 md:py-20">
         <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
-          <div className="p-5 md:p-7">
+          <div className="md:pr-10">
             <p className="text-sm uppercase tracking-[0.16em] text-stone-400">репутация автора</p>
             <h2 className="mt-2 max-w-2xl text-2xl font-semibold tracking-[-0.02em] text-stone-950">Факты об историях автора</h2>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-stone-700">
@@ -63,7 +63,7 @@ export default async function PublicProfilePage({ params }: { params: { username
               <p className="mt-3 max-w-xl text-base leading-7 text-stone-600">Первые собранные суммы появятся здесь, когда его истории получат поддержку.</p>
             )}
           </div>
-          <div className="border-t border-stone-200 bg-stone-50/80 p-5 md:border-l md:border-t-0 md:p-7">
+          <div className="mt-8 border-t border-stone-200 pt-8 md:mt-0 md:border-l md:border-t-0 md:pl-10 md:pt-0">
             <div className="space-y-4">
               {authorFacts.map((fact) => (
                 <p key={fact} className="border-b border-stone-200 pb-4 text-base leading-7 text-stone-800 last:border-0 last:pb-0">
@@ -90,7 +90,7 @@ export default async function PublicProfilePage({ params }: { params: { username
         </div>
       </section>
 
-      <section className="border-b border-stone-200 pb-10">
+      <section className="editorial-plane editorial-plane-quiet py-14 md:py-20">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-[0.16em] text-stone-400">достижения</p>
@@ -110,7 +110,7 @@ export default async function PublicProfilePage({ params }: { params: { username
         )}
       </section>
 
-      <section>
+      <section className="editorial-plane editorial-plane-warm py-16 md:py-24">
         <h2 className="text-2xl font-semibold tracking-[-0.02em] text-stone-950">Созданные сборы</h2>
         {profile.campaigns_created.length ? (
           <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">

@@ -7,23 +7,25 @@ export default async function PatronsPage() {
   const patrons = await fetchCommunityPatrons();
 
   return (
-    <section className="mx-auto max-w-6xl space-y-8">
-      <header className="overflow-hidden rounded-[34px] bg-emerald-950 p-6 text-white shadow-[0_24px_80px_rgba(6,78,59,0.20)] md:p-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">постоянная поддержка</p>
-        <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">Круг меценатов</h1>
-        <p className="mt-5 max-w-3xl text-base leading-7 text-emerald-50/85 md:text-lg">
-          Это пространство признания людей, для которых помощь стала регулярной частью жизни сообщества.
-          Круг показывает не места и не рейтинг, а продолжительность участия, число поддержанных историй
-          и реальный общий вклад.
-        </p>
-        <div className="mt-7 grid gap-3 sm:grid-cols-3">
-          <CommunityPrinciple title="Постоянство" text="Поддержка разных историй на протяжении времени." />
-          <CommunityPrinciple title="Признание" text="Благодарность за участие без сравнения людей между собой." />
-          <CommunityPrinciple title="Общий результат" text="Видимый след помощи в жизни авторов и сообщества." />
+    <section className="mx-auto max-w-6xl pb-12 md:pb-20">
+      <header className="relative left-1/2 w-screen -translate-x-1/2 bg-emerald-950 px-4 py-14 text-white md:px-8 md:py-20">
+        <div className="mx-auto max-w-[1180px]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">постоянная поддержка</p>
+          <h1 className="mt-3 max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">Круг меценатов</h1>
+          <p className="mt-5 max-w-3xl text-base leading-7 text-emerald-50/85 md:text-lg">
+            Это пространство признания людей, для которых помощь стала регулярной частью жизни сообщества.
+            Круг показывает не места и не рейтинг, а продолжительность участия, число поддержанных историй
+            и реальный общий вклад.
+          </p>
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <CommunityPrinciple title="Постоянство" text="Поддержка разных историй на протяжении времени." />
+            <CommunityPrinciple title="Признание" text="Благодарность за участие без сравнения людей между собой." />
+            <CommunityPrinciple title="Общий результат" text="Видимый след помощи в жизни авторов и сообщества." />
+          </div>
         </div>
       </header>
 
-      <section className="rounded-[28px] border border-emerald-100 bg-white p-6 shadow-sm md:p-8">
+      <section className="editorial-plane editorial-plane-white mt-16 py-12 md:mt-24 md:py-16">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">возможности круга</p>
         <h2 className="mt-2 text-2xl font-semibold text-stone-950">Участники Круга меценатов получают:</h2>
         <ul className="mt-4 space-y-3 text-stone-700">
@@ -33,7 +35,7 @@ export default async function PatronsPage() {
         </ul>
       </section>
 
-      <div>
+      <div className="editorial-plane editorial-plane-quiet mt-20 py-12 md:mt-28 md:py-16">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">участники круга</p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight text-stone-950">Люди, которые остаются рядом</h2>
         <p className="mt-2 max-w-2xl leading-7 text-stone-600">
@@ -42,11 +44,11 @@ export default async function PatronsPage() {
       </div>
 
       {patrons.length ? (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="mt-12 grid gap-x-10 gap-y-12 md:mt-16 lg:grid-cols-2">
           {patrons.map((patron) => <PatronCommunityCard key={patron.user_id} patron={patron} />)}
         </div>
       ) : (
-        <section className="rounded-[30px] border border-emerald-100 bg-white p-7 shadow-sm md:p-9">
+        <section className="editorial-plane editorial-plane-warm mt-12 py-12 md:mt-16 md:py-16">
           <h2 className="text-2xl font-semibold text-stone-950">Круг только формируется</h2>
           <p className="mt-3 max-w-2xl leading-7 text-stone-600">
             Участник присоединяется к Кругу после 50 подтверждённых вкладов в чужие истории.
@@ -60,7 +62,7 @@ export default async function PatronsPage() {
 
 function CommunityPrinciple({ title, text }: { title: string; text: string }) {
   return (
-    <div className="rounded-[22px] bg-white/8 p-4 ring-1 ring-white/10">
+    <div className="border-l border-white/20 pl-4">
       <p className="font-semibold text-white">{title}</p>
       <p className="mt-1 text-sm leading-6 text-emerald-50/70">{text}</p>
     </div>

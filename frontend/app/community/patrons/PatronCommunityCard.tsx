@@ -4,7 +4,7 @@ import type { CommunityPatron } from "@/lib/types";
 
 export function PatronCommunityCard({ patron }: { patron: CommunityPatron }) {
   return (
-    <article className="flex h-full flex-col rounded-[28px] border border-stone-200 bg-white p-5 shadow-[0_18px_55px_rgba(28,25,23,0.07)] md:p-6">
+    <article className="flex h-full flex-col border-t border-stone-200 pt-6">
       <div className="flex items-start gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-semibold text-emerald-900">
           {patron.username.slice(0, 1).toUpperCase()}
@@ -31,7 +31,7 @@ export function PatronCommunityCard({ patron }: { patron: CommunityPatron }) {
               <Link
                 key={campaign.id}
                 href={`/campaigns/${campaign.id}`}
-                className="group flex items-center gap-3 rounded-2xl bg-stone-50 p-2.5 transition hover:bg-emerald-50"
+                className="group flex items-center gap-3 border-b border-stone-100 py-3 transition hover:text-emerald-900"
               >
                 {campaign.cover_image_url ? (
                   <img src={campaign.cover_image_url} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />
@@ -55,7 +55,7 @@ export function PatronCommunityCard({ patron }: { patron: CommunityPatron }) {
 
 function PatronMetric({ label, value, compact = false }: { label: string; value: string; compact?: boolean }) {
   return (
-    <div className="min-w-0 rounded-2xl bg-stone-50 p-3">
+    <div className="min-w-0 border-l border-stone-200 px-3 py-2">
       <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-stone-400">{label}</p>
       <p className={`mt-1 truncate font-semibold text-stone-950 ${compact ? "text-sm" : "text-lg"}`} title={value}>
         {value}

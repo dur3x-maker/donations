@@ -49,13 +49,13 @@ export default function OpenBankAccountPage() {
   }
 
   if (isLoading || !isAuthenticated || !state) {
-    return <section className="mx-auto max-w-4xl rounded-[28px] border border-stone-200 bg-white p-6 text-stone-600 shadow-sm">Загружаем открытие счёта...</section>;
+    return <section className="editorial-plane editorial-plane-white mx-auto max-w-4xl py-8 text-stone-600">Загружаем открытие счёта...</section>;
   }
 
   const unavailable = !state.can_open_bank_account && !sent;
 
   return (
-    <section className="mx-auto max-w-5xl overflow-hidden rounded-[32px] border border-emerald-100 bg-white shadow-[0_24px_80px_rgba(28,25,23,0.12)]">
+    <section className="editorial-plane editorial-plane-white mx-auto max-w-5xl">
       <div className="grid lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="p-6 md:p-10">
           <Link href="/dashboard" className="text-sm font-semibold text-emerald-800 hover:text-emerald-950">← Вернуться в кабинет</Link>
@@ -108,7 +108,7 @@ export default function OpenBankAccountPage() {
 
 function Step({ index, title, text }: { index: string; title: string; text: string }) {
   return (
-    <div className="rounded-3xl bg-white/[0.08] p-4 ring-1 ring-white/10">
+    <div className="border-l border-white/20 pl-4">
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400 text-sm font-bold text-stone-950">{index}</span>
       <h2 className="mt-4 text-lg font-semibold">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-stone-300">{text}</p>

@@ -33,10 +33,10 @@ export default async function HomePage() {
   const homepageCampaigns = campaigns.slice(0, 7);
 
   return (
-    <div className="space-y-16 pb-10 md:space-y-24">
+    <div className="pb-12 md:pb-20">
       <LandingMotion stats={stats} featuredCampaign={homepageCampaigns[0] ?? null} />
 
-      <section id="campaigns" className="scroll-mt-24">
+      <section id="campaigns" className="mt-20 scroll-mt-24 md:mt-32">
         <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">активные истории</p>
@@ -54,13 +54,13 @@ export default async function HomePage() {
 
       <TrustCultureSection />
 
-      <section className="relative left-1/2 w-screen -translate-x-1/2 border-y border-stone-200 bg-white px-4 py-10 md:px-8 md:py-12">
+      <section className="relative left-1/2 mt-16 w-screen -translate-x-1/2 bg-white px-4 py-14 md:mt-24 md:px-8 md:py-20">
         <div className="mx-auto max-w-[1180px]">
           <ActivityFeed activities={activities.slice(0, 5)} />
         </div>
       </section>
 
-      <section aria-labelledby="completed-stories-title" className="border-y border-stone-200 py-8 md:py-10">
+      <section aria-labelledby="completed-stories-title" className="editorial-plane editorial-plane-quiet editorial-chapter mt-20 md:mt-32">
         <div className="mb-7 grid gap-4 md:grid-cols-[0.72fr_0.28fr] md:items-end">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">результат</p>
@@ -93,7 +93,7 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section aria-labelledby="homepage-faq-title">
+      <section aria-labelledby="homepage-faq-title" className="mt-24 md:mt-36">
         <div className="grid gap-8 lg:grid-cols-[0.48fr_0.52fr] lg:items-start">
           <div className="max-w-xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">FAQ</p>

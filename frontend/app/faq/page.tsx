@@ -108,8 +108,8 @@ const faqItems = [
 
 export default function FaqPage() {
   return (
-    <section className="space-y-8 pb-12">
-      <header className="max-w-4xl border-b border-stone-200 pb-8">
+    <section className="pb-12 md:pb-20">
+      <header className="max-w-4xl pb-4 md:pb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">FAQ</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-6xl">Центр помощи</h1>
         <p className="mt-4 max-w-3xl text-lg leading-8 text-stone-600">
@@ -117,9 +117,11 @@ export default function FaqPage() {
         </p>
       </header>
 
-      <FaqAccordion items={faqItems} />
+      <div className="mt-12 md:mt-16">
+        <FaqAccordion items={faqItems} />
+      </div>
 
-      <div className="border-t border-stone-200 pt-8">
+      <div className="editorial-plane editorial-plane-quiet editorial-chapter-compact mt-20 md:mt-28">
         <h2 className="text-2xl font-semibold text-stone-950 md:text-3xl">Не нашли ответ?</h2>
         <div className="mt-4 max-w-3xl space-y-3 leading-7 text-stone-600">
           <p>

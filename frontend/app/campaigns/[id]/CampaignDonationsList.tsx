@@ -16,7 +16,7 @@ export function CampaignDonationsList({
   onLoadMore: () => void;
 }) {
   return (
-    <section className="mx-auto max-w-3xl">
+    <section className="editorial-plane editorial-plane-warm mx-auto max-w-3xl py-16 md:py-24">
       <div>
         <h2 className="text-2xl font-semibold tracking-[-0.02em] text-stone-950">Последние участники</h2>
         <p className="mt-1 text-sm text-stone-500">Свежие подтверждённые вклады — от новых к более ранним.</p>

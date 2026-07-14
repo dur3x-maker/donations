@@ -45,11 +45,11 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
     }
   }
 
-  if (!campaign) return <div className="mx-auto max-w-3xl rounded-[28px] border border-stone-200 bg-white p-6 text-sm text-stone-600 shadow-sm">{message ?? "Загружаем сбор..."}</div>;
+  if (!campaign) return <div className="editorial-plane editorial-plane-white mx-auto max-w-3xl py-8 text-sm text-stone-600">{message ?? "Загружаем сбор..."}</div>;
 
   if (campaign.status !== "ACTIVE") {
     return (
-      <section className="mx-auto max-w-3xl rounded-[30px] border border-stone-200 bg-white p-6 shadow-[0_22px_70px_rgba(28,25,23,0.09)] md:p-8">
+      <section className="editorial-plane editorial-plane-quiet mx-auto max-w-3xl py-12 md:py-16">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">редактирование недоступно</p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-stone-950">{campaign.title}</h1>
         <p className="mt-3 text-sm leading-6 text-stone-600">
@@ -66,7 +66,7 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
   return (
     <section className="mx-auto max-w-3xl">
       <Link href="/dashboard" className="text-sm font-semibold text-emerald-800 hover:text-emerald-950">← Вернуться в кабинет</Link>
-      <form onSubmit={handleSubmit} className="mt-4 space-y-6 rounded-[30px] border border-stone-200 bg-white p-6 shadow-[0_22px_70px_rgba(28,25,23,0.09)] md:p-8">
+      <form onSubmit={handleSubmit} className="editorial-plane editorial-plane-white mt-8 space-y-6 py-12 md:mt-12 md:py-16">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">управление сбором</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-stone-950">{campaign.title}</h1>

@@ -35,7 +35,7 @@ export default function VerifyEmailPage() {
   }, [isAuthenticated, refreshAuth, searchParams]);
 
   return (
-    <section className="mx-auto max-w-2xl rounded-[32px] border border-emerald-100 bg-white p-6 text-center shadow-[0_24px_80px_rgba(28,25,23,0.10)] md:p-10">
+    <section className="editorial-plane editorial-plane-white mx-auto max-w-2xl py-12 text-center md:py-16">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">подтверждение email</p>
       <h1 className="mt-4 text-3xl font-semibold tracking-tight text-stone-950 md:text-5xl">
         {state === "success" ? "Email подтверждён ✅" : state === "loading" ? "Проверяем email" : "Ссылка не сработала"}

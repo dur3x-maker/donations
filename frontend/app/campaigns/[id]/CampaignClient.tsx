@@ -331,7 +331,7 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
   }
 
   return (
-    <div className="space-y-14 md:space-y-20">
+    <div>
       <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-stone-950">
         <div className="relative min-h-[clamp(380px,50svh,430px)] overflow-hidden md:min-h-[500px] lg:min-h-[60vh]">
           {campaign.cover_image_url ? <img src={campaign.cover_image_url} alt="" className="absolute inset-0 h-full w-full object-cover" /> : null}
@@ -359,7 +359,7 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
         </div>
       </section>
 
-      <section className="mx-auto max-w-4xl border-y border-stone-200 py-7">
+      <section className="editorial-plane editorial-plane-white mx-auto max-w-4xl py-10 md:py-14">
         {isOwner ? (
           <OwnerCampaignTools
             campaign={campaign}
@@ -384,14 +384,14 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
       </section>
 
       {campaign.status !== "ACTIVE" && Number(campaign.current_amount) >= Number(campaign.target_amount) ? (
-        <section className="mx-auto max-w-3xl border-y border-amber-200 py-6">
+        <section className="mx-auto mt-8 max-w-3xl border-y border-amber-200 py-6 md:mt-12">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">следующий шаг</p>
           <h2 className="mt-2 text-2xl font-semibold text-stone-950">История достигла цели.</h2>
           <p className="mt-2 max-w-2xl leading-7 text-stone-700">Средства будут доступны для вывода через банк-партнёр.</p>
         </section>
       ) : null}
 
-      <article className="mx-auto max-w-[720px] whitespace-pre-wrap px-1 text-[18px] leading-9 text-stone-700 md:text-[20px] md:leading-10">{campaign.description}</article>
+      <article className="editorial-plane editorial-plane-warm mx-auto max-w-[720px] whitespace-pre-wrap px-1 py-16 text-[18px] leading-9 text-stone-700 md:py-24 md:text-[20px] md:leading-10">{campaign.description}</article>
 
       <FutureUseOfFundsSection items={[]} />
 
@@ -492,7 +492,7 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
         onLoadMore={loadMoreDonations}
       />
 
-      <section className="mx-auto max-w-3xl border-t border-stone-200 pt-8">
+      <section className="editorial-plane editorial-plane-quiet mx-auto max-w-3xl py-14 md:py-20">
         <AuthorReputationCard campaign={campaign} reputation={authorReputation} isOwner={isOwner} />
       </section>
 
@@ -643,7 +643,7 @@ function CompletionReportSection({
 }) {
   if (report) {
     return (
-      <section className="border-y border-emerald-200 bg-emerald-50/50 py-7">
+      <section className="editorial-plane editorial-plane-quiet py-14 md:py-20">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">итог</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-stone-950">История завершена</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -757,7 +757,7 @@ function ShareSection({
   isOwner: boolean;
 }) {
   return (
-    <section className="mx-auto max-w-3xl border-t border-stone-200 pt-8">
+    <section className="editorial-plane editorial-plane-white mx-auto max-w-3xl py-14 md:py-20">
       <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
         <div>
           <h2 className="text-2xl font-semibold tracking-[-0.02em] text-stone-950">Поделиться сбором</h2>
@@ -862,7 +862,7 @@ function CampaignUpdatesSection({
 }) {
   const canPublishRegularUpdate = isOwner && campaignStatus === "ACTIVE";
   return (
-    <section id="campaign-updates" className="mx-auto max-w-3xl scroll-mt-24">
+    <section id="campaign-updates" className="editorial-plane editorial-plane-white mx-auto max-w-3xl scroll-mt-24 py-16 md:py-24">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200 pb-5">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">обновления</p>
@@ -913,7 +913,7 @@ function CampaignUpdatesSection({
           <div className="border-l border-stone-200 pl-6">
             {updates.map((update) => (
             <article key={update.id} className="relative pb-9 last:pb-0">
-              <span className="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full bg-emerald-600 ring-4 ring-[#fbfaf7]" />
+              <span className="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full bg-emerald-600 ring-4 ring-white" />
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-stone-400">{formatDate(update.created_at)}</p>
               <h3 className="mt-2 text-2xl font-semibold text-stone-950">{update.title}</h3>
               <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-stone-700">{update.content}</p>

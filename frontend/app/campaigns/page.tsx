@@ -15,14 +15,14 @@ export default async function CampaignsPage({
   const campaigns = await fetchCampaigns({ page, sort, q: query });
 
   return (
-    <section className="space-y-10 pb-10">
-      <header className="max-w-3xl border-b border-stone-200 pb-8">
+    <section className="pb-12 md:pb-20">
+      <header className="max-w-3xl pb-4 md:pb-8">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">открытые истории</p>
         <h1 className="mt-3 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-6xl">Кому сейчас нужна помощь</h1>
         <p className="mt-4 max-w-2xl text-lg leading-8 text-stone-600">Выберите историю, узнайте человека и посмотрите, как движется его цель.</p>
       </header>
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="editorial-plane editorial-plane-white mt-10 flex flex-col gap-4 py-6 md:mt-14 md:flex-row md:items-center md:justify-between md:py-8">
         <form action="/campaigns" className="flex flex-1 gap-2">
           <input
             type="search"
@@ -40,7 +40,9 @@ export default async function CampaignsPage({
         </Link>
       </div>
 
-      <CampaignsClient initialCampaigns={campaigns} page={page} sort={sort} query={query} />
+      <div className="mt-14 md:mt-20">
+        <CampaignsClient initialCampaigns={campaigns} page={page} sort={sort} query={query} />
+      </div>
     </section>
   );
 }

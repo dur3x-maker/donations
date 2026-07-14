@@ -65,8 +65,8 @@ export default function DashboardPage() {
   const campaign = dashboard?.campaign;
 
   return (
-    <section className="mx-auto max-w-6xl space-y-8 pb-10">
-      <header className="border-b border-stone-200 pb-8">
+    <section className="mx-auto max-w-6xl pb-12 md:pb-20">
+      <header className="pb-4 md:pb-8">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">{campaign ? "ваш сбор" : "личный кабинет"}</p>
@@ -93,19 +93,19 @@ function OwnerView({ dashboard, campaign, progress }: { dashboard: OwnerDashboar
   const canCreateAnotherCampaign = campaign.status === "COMPLETED" && progress?.can_create_campaign;
   return (
     <>
-      <div className="grid border-y border-stone-200 py-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="editorial-plane editorial-plane-white mt-12 grid py-8 sm:grid-cols-2 md:mt-16 lg:grid-cols-4 lg:py-10">
         <Metric label="Собрано" value={formatMoney(campaign.current_amount)} tone="green" />
         <Metric label="Поддержали" value={`${stats.unique_contributors_count} чел.`} />
         <Metric label="Сегодня" value={`+${formatMoney(stats.today_amount)}`} tone="lime" />
         <Metric label="Осталось" value={formatMoney(amountLeft(campaign.current_amount, campaign.target_amount))} />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
+      <div className="editorial-plane editorial-plane-quiet mt-16 grid gap-10 py-12 md:mt-24 md:py-16 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
         <CampaignCard campaign={campaign} canCreateAnotherCampaign={Boolean(canCreateAnotherCampaign)} canOpenBankAccount={Boolean(progress?.can_open_bank_account)} />
         <ManagementCard campaign={campaign} />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
+      <div className="editorial-plane editorial-plane-warm mt-20 grid gap-10 py-12 md:mt-28 md:py-16 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
         <StatsCard stats={stats} campaignsCount={dashboard.campaigns_count} />
         <RecentDonations donations={dashboard.recent_donations} />
       </div>
@@ -139,9 +139,9 @@ function MemberView({ progress }: { progress: ContributionProgress | null }) {
 
   const unlocked = progress.can_create_campaign;
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.82fr)]">
+    <div className="editorial-plane editorial-plane-warm mt-12 grid gap-10 py-12 md:mt-16 md:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.82fr)]">
       <ParticipationCard progress={progress} />
-      <section className="rounded-[28px] border border-emerald-100 bg-[linear-gradient(145deg,#ffffff,#ecfdf5)] p-6 shadow-[0_18px_55px_rgba(28,25,23,0.07)]">
+      <section className="border-t border-stone-200 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">следующий шаг</p>
         <h2 className="mt-3 text-2xl font-semibold text-stone-950">{unlocked ? "Расскажите свою историю" : "Найдите сбор для поддержки"}</h2>
         <p className="mt-3 text-sm leading-6 text-stone-600">
@@ -169,7 +169,7 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: "
 function CampaignCard({ campaign, canCreateAnotherCampaign, canOpenBankAccount }: { campaign: CampaignListItem; canCreateAnotherCampaign: boolean; canOpenBankAccount: boolean }) {
   const canEdit = campaign.status === "ACTIVE";
   return (
-    <section className="border-y border-stone-200 bg-white py-6">
+    <section className="py-2">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">мой сбор</p>
@@ -204,7 +204,7 @@ function ManagementCard({ campaign }: { campaign: CampaignListItem }) {
     ["Изменить цель", `/campaigns/${campaignId}/edit#target`],
   ];
   return (
-    <section className="border-t border-stone-200 pt-6">
+    <section className="border-t border-stone-200 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">управление</p>
       <h2 className="mt-2 text-xl font-semibold text-stone-950">Быстрые действия</h2>
       <div className="mt-5 space-y-2">
@@ -227,7 +227,7 @@ function ManagementCard({ campaign }: { campaign: CampaignListItem }) {
 
 function StatsCard({ stats, campaignsCount }: { stats: NonNullable<OwnerDashboard["stats"]>; campaignsCount: number }) {
   return (
-    <section className="border-t border-stone-200 pt-6">
+    <section>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-400">статистика</p>
       <h2 className="mt-2 text-xl font-semibold text-stone-950">Как идет сбор</h2>
       <div className="mt-5 divide-y divide-stone-100">
@@ -247,7 +247,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function RecentDonations({ donations }: { donations: RecentDonation[] }) {
   return (
-    <section className="border-t border-stone-200 pt-6">
+    <section className="border-t border-stone-200 pt-8 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
       <div className="flex items-end justify-between gap-3">
         <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">поступления</p><h2 className="mt-2 text-xl font-semibold text-stone-950">Последние вклады</h2></div>
         <span className="flex items-center gap-2 text-xs font-semibold text-emerald-700"><span className="h-2 w-2 rounded-full bg-emerald-500" />обновляются</span>
@@ -268,15 +268,15 @@ function RecentDonations({ donations }: { donations: RecentDonation[] }) {
 }
 
 function LoadingCard() {
-  return <div className="rounded-[28px] border border-stone-200 bg-white p-5 text-stone-600 shadow-sm">Загружаем кабинет...</div>;
+  return <div className="editorial-plane editorial-plane-white mt-12 py-8 text-stone-600">Загружаем кабинет...</div>;
 }
 
 function DashboardSkeleton() {
-  return <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-24 animate-pulse rounded-[22px] bg-white shadow-sm" />)}</div>;
+  return <div className="editorial-plane editorial-plane-white mt-12 grid gap-6 py-8 sm:grid-cols-2 lg:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-20 animate-pulse border-l border-stone-200 bg-stone-100/70" />)}</div>;
 }
 
 function DashboardError({ message }: { message: string }) {
-  return <div className="rounded-[24px] border border-rose-100 bg-rose-50 px-5 py-4 text-sm leading-6 text-rose-800">{message}</div>;
+  return <div className="mt-12 border-y border-rose-200 bg-rose-50/60 py-5 text-sm leading-6 text-rose-800">{message}</div>;
 }
 
 function relativeTime(value: string) {
