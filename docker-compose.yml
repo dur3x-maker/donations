@@ -28,7 +28,7 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
       WS_MAX_CONNECTIONS_PER_IP: ${WS_MAX_CONNECTIONS_PER_IP:-20}
-      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
+      DEMO_PUBLIC_BASE_URL: ${DEMO_PUBLIC_BASE_URL:-${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}}
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
@@ -38,7 +38,6 @@ services:
         condition: service_healthy
     command: >
       sh -c "alembic upgrade head &&
-             if [ \"$$SEED_DEMO_DATA\" = \"true\" ]; then python -m app.seed; fi &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers"
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/ready', timeout=3).read()\""]

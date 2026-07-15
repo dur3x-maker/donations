@@ -1,0 +1,86 @@
+{
+  "dataset": "demo_showcase_v1",
+  "license": {
+    "name": "Unsplash License",
+    "url": "https://unsplash.com/license"
+  },
+  "assets": [
+    {
+      "file": "rehab-wheelchair.jpg",
+      "author": "Raj Tuladhar",
+      "source": "https://unsplash.com/photos/a-woman-in-a-wheelchair-standing-next-to-a-man-in-a-park-UlG-z-Kz_AI",
+      "download_id": "UlG-z-Kz_AI",
+      "sha256": "96c9ef654223a4c018bbfa75e0eed3b92493cca0a2bea6df21051eb956d07470"
+    },
+    {
+      "file": "family-fire.jpg",
+      "author": "Francesco Ungaro",
+      "source": "https://unsplash.com/photos/a-room-with-a-ladder-and-a-window-in-it-Ft2vhTaKZJM",
+      "download_id": "Ft2vhTaKZJM",
+      "sha256": "776a630fab4238b5760a664592c64cd9420bc7aa3d4f5b4dd2e14b5737f260db"
+    },
+    {
+      "file": "hearing-aid.jpg",
+      "author": "Mark Paton",
+      "source": "https://unsplash.com/photos/a-close-up-of-a-man-with-ear-buds-on-his-ears-dn6KOZXmISw",
+      "download_id": "dn6KOZXmISw",
+      "sha256": "ca4c8dd4e1c6c10e9f12fba306f1020fffe6d0ecbbaffb2ab595945d83a8e6ea"
+    },
+    {
+      "file": "career-study.jpg",
+      "author": "Yanhao Fang",
+      "source": "https://unsplash.com/photos/a-person-studying-at-a-desk-with-books-QR-XQbUVC1s",
+      "download_id": "QR-XQbUVC1s",
+      "sha256": "8adcad9fd836301eb21a53bd5fbca101f0cc1f0f39ea6a512b78ef026d585f7b"
+    },
+    {
+      "file": "animal-shelter.jpg",
+      "author": "Anna Kumpan",
+      "source": "https://unsplash.com/photos/white-and-black-cat-on-white-metal-frame-Pm-8aIzBtvo",
+      "download_id": "Pm-8aIzBtvo",
+      "sha256": "ea16c14705719d3e2df3488b109e7e2bff6308ba1f405dde6200ca4feaf8083e"
+    },
+    {
+      "file": "youth-track.jpg",
+      "author": "Rosario Fernandes",
+      "source": "https://unsplash.com/photos/two-young-boys-running-on-a-running-track-ezXAa9THkMQ",
+      "download_id": "ezXAa9THkMQ",
+      "sha256": "0c4c5ca959551e1cb6b88b9d2fa1d0e9a4051244308fa907d3eb6fd6bbe63cbb"
+    },
+    {
+      "file": "family-workshop.jpg",
+      "author": "Ben Spray",
+      "source": "https://unsplash.com/photos/workshop-tools-are-scattered-on-a-work-table-f0T-eGanP_4",
+      "download_id": "f0T-eGanP_4",
+      "sha256": "b3ee0e203135a2bad26b761152aa9f42bd82df6d90702a71bbccf898ed9b312a"
+    },
+    {
+      "file": "accessible-home.jpg",
+      "author": "Sergio Artnoart",
+      "source": "https://unsplash.com/photos/accessible-entrance-ramp-with-stairs-and-handrails-qsYpu5eLLv4",
+      "download_id": "qsYpu5eLLv4",
+      "sha256": "23fab0bcb02dfb8a9dd276ec4d20f37f40beba5fe4810a52bf9ad28e6fe6d2d0"
+    },
+    {
+      "file": "community-garden.jpg",
+      "author": "Tanya Barrow",
+      "source": "https://unsplash.com/photos/flowers-bloom-in-a-community-garden-YLZqMttdeQs",
+      "download_id": "YLZqMttdeQs",
+      "sha256": "01bb8bc89115eb8beef5518439abe4d96829d75e99054ecbd8054affa266a312"
+    },
+    {
+      "file": "ceramics-workshop.jpg",
+      "author": "Jonathan Cosens Photography",
+      "source": "https://unsplash.com/photos/a-person-working-on-pottery-in-a-pottery-studio-EJDh1wIWTF4",
+      "download_id": "EJDh1wIWTF4",
+      "sha256": "833d8f7b80bebfaf102827567a449d53be5eade2ef53d412d6fdd44161532ce9"
+    },
+    {
+      "file": "inclusive-workshop.jpg",
+      "author": "Barn Images",
+      "source": "https://unsplash.com/photos/assorted-handheld-tools-in-tool-rack-t5YUoHW6zRo",
+      "download_id": "t5YUoHW6zRo",
+      "sha256": "cf9ea750d514f274de72215acbb37f6208480cf7a70dafb313d0138b5b2ab499"
+    }
+  ]
+}
