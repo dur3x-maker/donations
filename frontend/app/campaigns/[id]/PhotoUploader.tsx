@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useEffect, useRef, useState } from "react";
+import { getImageValidationError, IMAGE_INPUT_ACCEPT, MAX_IMAGE_SIZE_MB } from "@/lib/image-upload";
 
 export type PendingPhoto = {
   id: string;
@@ -9,8 +10,6 @@ export type PendingPhoto = {
 };
 
 const MAX_PHOTOS = 12;
-const MAX_SIZE = 5 * 1024 * 1024;
-const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export function PhotoUploader({
   photos,
@@ -35,13 +34,13 @@ export function PhotoUploader({
   function addFiles(files: FileList | File[]) {
     setError(null);
     const incoming = Array.from(files);
-    const invalid = incoming.find((file) => !ACCEPTED_TYPES.has(file.type) || file.size > MAX_SIZE);
+    const invalid = incoming.find((file) => getImageValidationError(file));
     if (invalid) {
-      setError("Допустимы JPG, PNG и WebP до 5 МБ.");
+      setError(getImageValidationError(invalid));
     }
 
     const accepted = incoming
-      .filter((file) => ACCEPTED_TYPES.has(file.type) && file.size <= MAX_SIZE)
+      .filter((file) => !getImageValidationError(file))
       .slice(0, Math.max(0, MAX_PHOTOS - photos.length))
       .map((file) => ({
         id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
@@ -75,11 +74,11 @@ export function PhotoUploader({
         onDrop={handleDrop}
       >
         <span className="rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white">Выбрать фото</span>
-        <span className="mt-2 text-xs leading-5 text-stone-500">или перетащите сюда · JPG, PNG, WebP · до 5 МБ</span>
+        <span className="mt-2 text-xs leading-5 text-stone-500">или перетащите сюда · JPG, PNG, WebP · до {MAX_IMAGE_SIZE_MB} МБ</span>
         <input
           className="sr-only"
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept={IMAGE_INPUT_ACCEPT}
           multiple
           required={required && !photos.length}
           onChange={handleInput}

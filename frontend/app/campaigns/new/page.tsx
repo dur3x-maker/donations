@@ -8,6 +8,7 @@ import { UserErrorAlert } from "@/components/user-error-alert";
 import { useAuth } from "@/components/providers/auth-provider";
 import { createCampaign, fetchContributionProgress, uploadCampaignCover } from "@/lib/api";
 import { toUserError, type UserError } from "@/lib/user-errors";
+import { getImageValidationError, IMAGE_INPUT_ACCEPT, MAX_IMAGE_SIZE_MB } from "@/lib/image-upload";
 import type { CampaignCategory, ContributionProgress } from "@/lib/types";
 import {
   CAMPAIGN_DESCRIPTION_MAX_LENGTH,
@@ -58,6 +59,7 @@ export default function NewCampaignPage() {
   const [targetAmount, setTargetAmount] = useState("10000");
   const [category, setCategory] = useState<CampaignCategory>("other");
   const [coverImages, setCoverImages] = useState<CoverImagePreview[]>([]);
+  const [coverError, setCoverError] = useState<string | null>(null);
   const [supportingDocuments, setSupportingDocuments] = useState<SupportingDocument[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<UserError | null>(null);
@@ -102,7 +104,10 @@ export default function NewCampaignPage() {
   }, []);
 
   function addCoverImages(files: FileList | File[]) {
-    const imageFiles = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    const incomingFiles = Array.from(files);
+    const invalidFile = incomingFiles.find((file) => getImageValidationError(file));
+    setCoverError(invalidFile ? getImageValidationError(invalidFile) : null);
+    const imageFiles = incomingFiles.filter((file) => !getImageValidationError(file));
     if (!imageFiles.length) return;
 
     setCoverImages((currentImages) => {
@@ -298,9 +303,11 @@ export default function NewCampaignPage() {
             onDrop={handleCoverDrop}
           >
             <span className="text-sm font-semibold text-stone-800">Выберите фото или перетащите сюда</span>
-            <span className="mt-2 text-xs leading-5 text-stone-500">JPG или PNG, максимум {maxCoverImages} изображения</span>
-            <input className="sr-only" type="file" accept="image/jpeg,image/png" multiple onChange={handleCoverInputChange} disabled={coverImages.length >= maxCoverImages} />
+            <span className="mt-2 text-xs leading-5 text-stone-500">JPG, PNG или WebP · до {MAX_IMAGE_SIZE_MB} МБ · максимум {maxCoverImages} изображения</span>
+            <input className="sr-only" type="file" accept={IMAGE_INPUT_ACCEPT} multiple onChange={handleCoverInputChange} disabled={coverImages.length >= maxCoverImages} />
           </label>
+
+          {coverError ? <p className="text-sm text-rose-700">{coverError}</p> : null}
 
           {coverImages.length ? (
             <div className="grid gap-3 sm:grid-cols-3">

@@ -1,4 +1,5 @@
 import type { ActivityItem, AuthResponse, AuthUser, AuthorReputation, BankAccountApplication, BankAccountApplicationState, CampaignCompletionReport, CampaignCompletionReportCreateInput, CampaignCreateInput, CampaignDetail, CampaignListItem, CampaignSubscription, CampaignUpdateCreateInput, CampaignUpdateInput, CampaignUpdateItem, CommunityPatron, CompletedCampaignListItem, ContactRequestInput, ContributionProgress, DonateResponse, NotificationItem, OwnerDashboard, PlatformStats, ProfileImpact, ProfileSummary, ProfileUpdateInput, PublicUserProfile, RecentDonationsPage, ReportResponse, UserAchievement, WithdrawalInfo } from "./types";
+import { assertValidImage, MAX_IMAGE_SIZE_MB } from "./image-upload";
 
 const browserApiUrl = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL, "NEXT_PUBLIC_API_URL");
 const serverApiUrl = normalizeApiUrl(process.env.INTERNAL_API_URL ?? browserApiUrl, "INTERNAL_API_URL");
@@ -145,6 +146,10 @@ export async function request<T>(path: string, init?: RequestInit, retry = true)
 }
 
 async function readErrorMessage(response: Response) {
+  if (response.status === 413) {
+    return `Фото слишком большое. Максимальный размер — ${MAX_IMAGE_SIZE_MB} МБ.`;
+  }
+
   let message = `Запрос не удался: ${response.status}`;
 
   try {
@@ -279,6 +284,7 @@ export function createCampaign(body: CampaignCreateInput) {
 }
 
 export async function uploadCampaignCover(file: File) {
+  assertValidImage(file);
   const formData = new FormData();
   formData.append("file", file);
 
@@ -303,6 +309,7 @@ export async function uploadCampaignCover(file: File) {
 }
 
 export async function uploadStoryPhoto(file: File) {
+  assertValidImage(file);
   const formData = new FormData();
   formData.append("file", file);
   const headers = new Headers();
@@ -320,6 +327,7 @@ export async function uploadStoryPhoto(file: File) {
 }
 
 export async function uploadAvatar(file: File) {
+  assertValidImage(file);
   const formData = new FormData();
   formData.append("file", file);
   const headers = new Headers();

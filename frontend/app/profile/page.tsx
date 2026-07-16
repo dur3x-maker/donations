@@ -7,10 +7,8 @@ import { CampaignCard } from "@/app/components/CampaignCard";
 import { useAuth } from "@/components/providers/auth-provider";
 import { fetchProfileImpact, fetchProfileSummary, fetchPublicProfile, fetchUserAchievements, resendEmailVerification, updateProfile, uploadAvatar } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
+import { getImageValidationError, IMAGE_INPUT_ACCEPT, MAX_IMAGE_SIZE_MB } from "@/lib/image-upload";
 import type { AuthUser, CampaignListItem, ProfileImpact, ProfileSummary, UserAchievement } from "@/lib/types";
-
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -95,13 +93,9 @@ export default function ProfilePage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-      setProfileStatus("Допустимы только JPG, PNG и WebP.");
-      event.target.value = "";
-      return;
-    }
-    if (file.size > MAX_AVATAR_SIZE) {
-      setProfileStatus("Размер аватара не должен превышать 2 МБ.");
+    const validationError = getImageValidationError(file);
+    if (validationError) {
+      setProfileStatus(validationError);
       event.target.value = "";
       return;
     }
@@ -136,8 +130,8 @@ export default function ProfilePage() {
 
   return (
     <section className="mx-auto max-w-6xl pb-12 md:pb-20">
-      <header className="bg-stone-950 p-6 text-white md:p-8">
-        <div className="grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+      <header className="relative left-1/2 -mt-7 w-screen -translate-x-1/2 bg-stone-950 px-4 py-8 text-white md:-mt-12 md:px-8 lg:static lg:mt-0 lg:w-auto lg:translate-x-0 lg:p-8">
+        <div className="mx-auto grid max-w-6xl gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
           <ProfileAvatar name={displayName} username={user.username} avatarUrl={profileForm.avatar_url || user.avatar_url} />
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">ваш профиль</p>
@@ -174,9 +168,10 @@ export default function ProfilePage() {
               </div>
               <label className="flex min-h-11 cursor-pointer items-center rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-800 transition hover:bg-emerald-50 hover:text-emerald-800">
                 {isAvatarUploading ? "Загрузка..." : "Изменить фото"}
-                <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarChange} disabled={isAvatarUploading || isProfileSaving} />
+                <input className="sr-only" type="file" accept={IMAGE_INPUT_ACCEPT} onChange={handleAvatarChange} disabled={isAvatarUploading || isProfileSaving} />
               </label>
             </div>
+            <p className="mt-2 text-xs text-stone-500">JPG, PNG или WebP, до {MAX_IMAGE_SIZE_MB} МБ.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <ProfileInput label="Имя" value={profileForm.first_name} onChange={(value) => setProfileForm((current) => ({ ...current, first_name: value }))} maxLength={80} />
               <ProfileInput label="Фамилия" value={profileForm.last_name} onChange={(value) => setProfileForm((current) => ({ ...current, last_name: value }))} maxLength={80} />

@@ -16,8 +16,7 @@ ALLOWED_IMAGE_TYPES = {
     "image/png": ".png",
     "image/webp": ".webp",
 }
-MAX_IMAGE_SIZE = 5 * 1024 * 1024
-MAX_AVATAR_SIZE = 2 * 1024 * 1024
+MAX_IMAGE_SIZE = 10 * 1024 * 1024
 
 
 @router.post("/campaign-cover")
@@ -26,13 +25,7 @@ async def upload_campaign_cover(
     file: UploadFile = File(...),
     current_user: User = Depends(require_current_user),
 ) -> dict[str, str]:
-    extension = ALLOWED_IMAGE_TYPES.get(file.content_type or "")
-    if extension is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only JPG and PNG images are allowed")
-
-    content = await file.read()
-    if len(content) > MAX_IMAGE_SIZE:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Image is too large")
+    extension, content = await _read_valid_image(file)
 
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     filename = f"{uuid4().hex}{extension}"
@@ -49,15 +42,7 @@ async def upload_story_photo(
     file: UploadFile = File(...),
     current_user: User = Depends(require_current_user),
 ) -> dict[str, str]:
-    extension = ALLOWED_IMAGE_TYPES.get(file.content_type or "")
-    if extension is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Допустимы только JPG, PNG и WebP")
-
-    content = await file.read(MAX_IMAGE_SIZE + 1)
-    if len(content) > MAX_IMAGE_SIZE:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Размер изображения не должен превышать 5 МБ")
-    if not _matches_image_signature(content, extension):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Файл не соответствует заявленному формату изображения")
+    extension, content = await _read_valid_image(file)
 
     STORY_PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     filename = f"{uuid4().hex}{extension}"
@@ -72,21 +57,35 @@ async def upload_avatar(
     file: UploadFile = File(...),
     current_user: User = Depends(require_current_user),
 ) -> dict[str, str]:
-    extension = ALLOWED_IMAGE_TYPES.get(file.content_type or "")
-    if extension is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Допустимы только JPG, PNG и WebP")
-
-    content = await file.read(MAX_AVATAR_SIZE + 1)
-    if len(content) > MAX_AVATAR_SIZE:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Размер аватара не должен превышать 2 МБ")
-    if not _matches_image_signature(content, extension):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Файл не соответствует заявленному формату изображения")
+    extension, content = await _read_valid_image(file)
 
     AVATAR_DIR.mkdir(parents=True, exist_ok=True)
     filename = f"{current_user.id}-{uuid4().hex}{extension}"
     (AVATAR_DIR / filename).write_bytes(content)
     base_url = str(request.base_url).rstrip("/")
     return {"url": f"{base_url}/uploads/avatars/{filename}"}
+
+
+async def _read_valid_image(file: UploadFile) -> tuple[str, bytes]:
+    extension = ALLOWED_IMAGE_TYPES.get(file.content_type or "")
+    if extension is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Допустимы только JPG, PNG и WebP.",
+        )
+
+    content = await file.read(MAX_IMAGE_SIZE + 1)
+    if len(content) > MAX_IMAGE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Фото слишком большое. Максимальный размер — 10 МБ.",
+        )
+    if not _matches_image_signature(content, extension):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Файл не соответствует заявленному формату изображения.",
+        )
+    return extension, content
 
 
 def _matches_image_signature(content: bytes, extension: str) -> bool:

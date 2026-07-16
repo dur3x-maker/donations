@@ -74,7 +74,7 @@ export default async function HomePage() {
         </div>
 
         {completedCampaigns.length ? (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="scrollbar-none relative left-1/2 grid w-screen -translate-x-1/2 snap-x snap-mandatory auto-cols-[86vw] grid-flow-col gap-4 overflow-x-auto overscroll-x-contain px-4 pb-2 [-webkit-overflow-scrolling:touch] md:static md:w-auto md:translate-x-0 md:snap-none md:auto-cols-auto md:grid-flow-row md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-3">
             {completedCampaigns.map((campaign) => <CompletedCampaignCard key={campaign.id} campaign={campaign} />)}
           </div>
         ) : (

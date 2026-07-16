@@ -25,27 +25,36 @@ export function Navbar() {
     };
   }, [isDrawerOpen]);
 
+  useEffect(() => {
+    if (!isDrawerOpen) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsDrawerOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [isDrawerOpen]);
+
   const closeDrawer = () => setIsDrawerOpen(false);
   const handleLogout = () => {
     closeDrawer();
     logout();
   };
 
-  const drawerLinks = isAuthenticated
+  const accountLinks = isAuthenticated
     ? [
-        { label: "Главная", href: "/" },
-        { label: "Новости", href: "/#activity" },
-        { label: "FAQ", href: "/faq" },
         { label: "Мой профиль", href: "/profile" },
         { label: "Мои сборы", href: "/dashboard" },
       ]
     : [
-        { label: "Главная", href: "/" },
-        { label: "Новости", href: "/#activity" },
-        { label: "FAQ", href: "/faq" },
         { label: "Войти", href: "/login" },
         { label: "Регистрация", href: "/register" },
       ];
+  const navigationLinks = [
+    { label: "Главная", href: "/" },
+    { label: "Новости", href: "/#activity" },
+    { label: "FAQ", href: "/faq" },
+  ];
 
   return (
     <>
@@ -113,34 +122,42 @@ export function Navbar() {
       {isDrawerOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button className="absolute inset-0 bg-stone-950/60" type="button" aria-label="Закрыть меню" onClick={closeDrawer} />
-          <aside className="absolute left-0 top-0 flex h-full w-[min(86vw,320px)] flex-col bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] shadow-xl">
+          <aside className="absolute left-0 top-0 flex h-full w-[min(86vw,320px)] flex-col bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] shadow-xl" aria-label="Мобильная навигация">
             <div className="flex items-center justify-between border-b border-stone-100 px-4 pb-4">
-              <Brand dark />
-              <button className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 text-xl text-stone-700" type="button" aria-label="Закрыть меню" onClick={closeDrawer}>
+              <Brand dark onNavigate={closeDrawer} />
+              <button className="flex h-11 w-11 items-center justify-center rounded-full bg-stone-100 text-xl text-stone-700" type="button" aria-label="Закрыть меню" onClick={closeDrawer}>
                 ×
               </button>
             </div>
-            <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
-              {drawerLinks.map((link) => (
-                <Link key={link.href} href={link.href} onClick={closeDrawer} className="rounded-2xl px-4 py-3 text-base font-semibold text-stone-800 transition hover:bg-stone-100">
-                  {link.label}
-                </Link>
-              ))}
-              <button
-                className="rounded-2xl px-4 py-3 text-left text-base font-semibold text-stone-800 transition hover:bg-stone-100"
-                type="button"
-                onClick={() => {
-                  closeDrawer();
-                  setIsContactOpen(true);
-                }}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3">
+              <div className="flex flex-col gap-1">
+                {navigationLinks.map((link) => (
+                  <Link key={link.href} href={link.href} onClick={closeDrawer} className="flex min-h-11 items-center rounded-xl px-4 py-2.5 text-base font-semibold text-stone-800 transition hover:bg-stone-100">
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="mt-3 flex flex-col gap-1 border-t border-stone-200 pt-3">
+                {accountLinks.map((link) => (
+                  <Link key={link.href} href={link.href} onClick={closeDrawer} className="flex min-h-11 items-center rounded-xl px-4 py-2.5 text-base font-semibold text-stone-800 transition hover:bg-stone-100">
+                    {link.label}
+                  </Link>
+                ))}
+                {isAuthenticated ? (
+                  <button className="flex min-h-11 items-center rounded-xl px-4 py-2.5 text-left text-base font-semibold text-red-700 transition hover:bg-red-50" type="button" onClick={handleLogout}>
+                    Выйти
+                  </button>
+                ) : null}
+              </div>
+
+              <Link
+                href="/#campaigns"
+                className="mt-auto flex min-h-12 w-full items-center justify-center rounded-full bg-stone-950 px-5 py-3 text-base font-semibold text-white transition hover:bg-emerald-800"
+                onClick={closeDrawer}
               >
-                Поддержка
-              </button>
-              {isAuthenticated ? (
-                <button className="mt-2 rounded-2xl px-4 py-3 text-left text-base font-semibold text-red-700 transition hover:bg-red-50" type="button" onClick={handleLogout}>
-                  Выйти
-                </button>
-              ) : null}
+                Поддержать
+              </Link>
             </div>
           </aside>
         </div>
@@ -151,9 +168,9 @@ export function Navbar() {
   );
 }
 
-function Brand({ compact = false, dark = false }: { compact?: boolean; dark?: boolean }) {
+function Brand({ compact = false, dark = false, onNavigate }: { compact?: boolean; dark?: boolean; onNavigate?: () => void }) {
   return (
-    <Link href="/" className={`flex min-w-0 items-center gap-2 font-semibold tracking-tight ${dark ? "text-stone-950" : "text-white"}`}>
+    <Link href="/" onClick={onNavigate} className={`flex min-w-0 items-center gap-2 font-semibold tracking-tight ${dark ? "text-stone-950" : "text-white"}`}>
       {!compact ? <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${dark ? "bg-stone-950 text-white" : "bg-white text-stone-950"}`}>T</span> : null}
       <span className="truncate">TipForTea</span>
     </Link>

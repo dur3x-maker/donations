@@ -6,7 +6,7 @@ export function CompletedCampaignCard({ campaign }: { campaign: CompletedCampaig
   return (
     <Link
       href={`/campaigns/${campaign.id}`}
-      className="group flex h-full flex-col overflow-hidden rounded-[14px] border border-stone-200 bg-white outline-none transition hover:border-emerald-400 focus-visible:ring-4 focus-visible:ring-emerald-200"
+      className="group flex h-full min-w-0 snap-start scroll-ml-4 flex-col overflow-hidden rounded-[14px] border border-stone-200 bg-white outline-none transition hover:border-emerald-400 focus-visible:ring-4 focus-visible:ring-emerald-200 md:snap-none"
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
         {campaign.cover_image_url ? (

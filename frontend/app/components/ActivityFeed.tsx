@@ -39,7 +39,7 @@ function ActivityRow({ activity }: { activity: ActivityItem }) {
   const campaignTitle = activity.campaign?.title;
 
   return (
-    <div className="relative flex items-start gap-3">
+    <div className="relative flex min-w-0 items-start gap-3">
       <span className="absolute -left-[21px] top-2 h-2.5 w-2.5 rounded-full bg-emerald-600 ring-4 ring-white" />
       <Link
         href={activity.actor ? `/u/${activity.actor.username}` : "/campaigns"}
@@ -58,11 +58,11 @@ function ActivityRow({ activity }: { activity: ActivityItem }) {
 
 function ActorLink({ activity, actorName }: { activity: ActivityItem; actorName: string }) {
   if (!activity.actor) {
-    return <span className="font-semibold text-stone-950">{actorName}</span>;
+    return <span className="break-words font-semibold text-stone-950 [overflow-wrap:anywhere]">{actorName}</span>;
   }
 
   return (
-    <Link href={`/u/${activity.actor.username}`} className="font-semibold text-stone-950 transition hover:text-emerald-800">
+    <Link href={`/u/${activity.actor.username}`} className="break-words font-semibold text-stone-950 transition [overflow-wrap:anywhere] hover:text-emerald-800">
       {actorName}
     </Link>
   );
@@ -73,7 +73,7 @@ function ActivityCopy({ activity, actorName, campaignTitle }: { activity: Activi
 
   if (activity.type === "campaign_created") {
     return (
-      <p className="truncate text-sm leading-5 text-stone-600">
+      <p className="line-clamp-3 whitespace-normal break-words text-sm leading-5 text-stone-600 [overflow-wrap:anywhere]">
         Новая история от <ActorLink activity={activity} actorName={actorName} />: {title}
       </p>
     );
@@ -81,7 +81,7 @@ function ActivityCopy({ activity, actorName, campaignTitle }: { activity: Activi
 
   if (activity.type === "campaign_completed") {
     return (
-      <p className="truncate text-sm leading-5 text-stone-600">
+      <p className="line-clamp-3 whitespace-normal break-words text-sm leading-5 text-stone-600 [overflow-wrap:anywhere]">
         Сбор {title} закрыт при участии <ActorLink activity={activity} actorName={actorName} />
       </p>
     );
@@ -89,14 +89,14 @@ function ActivityCopy({ activity, actorName, campaignTitle }: { activity: Activi
 
   if (activity.type === "unlock_achieved") {
     return (
-      <p className="truncate text-sm leading-5 text-stone-600">
+      <p className="line-clamp-3 whitespace-normal break-words text-sm leading-5 text-stone-600 [overflow-wrap:anywhere]">
         <ActorLink activity={activity} actorName={actorName} /> теперь может рассказать свою историю
       </p>
     );
   }
 
   return (
-    <p className="truncate text-sm leading-5 text-stone-600">
+    <p className="line-clamp-3 whitespace-normal break-words text-sm leading-5 text-stone-600 [overflow-wrap:anywhere]">
       <ActorLink activity={activity} actorName={actorName} /> поддерживает {title}
     </p>
   );

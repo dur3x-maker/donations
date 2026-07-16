@@ -147,11 +147,17 @@ function MemberView({ progress }: { progress: ContributionProgress | null }) {
         <p className="mt-3 text-sm leading-6 text-stone-600">
           {unlocked ? "Порог пройден. Создайте страницу сбора: добавьте цель, описание и материалы для проверки." : "Каждый подтвержденный вклад приближает открытие собственного сбора и помогает живой истории прямо сейчас."}
         </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/campaigns" className="inline-flex rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700">Найти сбор для поддержки</Link>
-          {unlocked ? <Link href="/campaigns/new" className="inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200 transition hover:bg-emerald-50">Создать сбор</Link> : null}
-          {progress.can_open_bank_account ? <Link href="/bank-account/open" className="inline-flex rounded-full bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800">Открыть счёт</Link> : null}
+        <div className="mt-6 flex flex-col gap-3 md:flex-row md:flex-wrap">
+          {unlocked ? <Link href="/campaigns/new" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-stone-950 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-emerald-700 md:w-auto">Создать сбор</Link> : null}
+          {progress.can_open_bank_account ? <Link href="/bank-account/open" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-emerald-700 px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-emerald-800 md:w-auto">Открыть счёт</Link> : null}
+          <Link href="/campaigns" className={`inline-flex min-h-12 w-full items-center justify-center rounded-full px-5 py-3 text-center text-sm font-semibold transition md:w-auto ${unlocked ? "bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50" : "bg-stone-950 text-white hover:bg-emerald-700"}`}>Найти сбор для поддержки</Link>
         </div>
+        {unlocked && !progress.can_open_bank_account && !progress.has_bank_account && progress.bank_account_application_status ? (
+          <p className="mt-3 text-sm leading-6 text-stone-500">
+            {progress.bank_account_application_status === "PENDING" ? "Заявка на открытие счёта уже отправлена и находится на рассмотрении." : "Открытие счёта сейчас недоступно: статус заявки можно уточнить в профиле."}
+          </p>
+        ) : null}
+        {unlocked && progress.has_bank_account ? <p className="mt-3 text-sm leading-6 text-stone-500">Счёт уже открыт — можно переходить к созданию сбора.</p> : null}
       </section>
     </div>
   );
