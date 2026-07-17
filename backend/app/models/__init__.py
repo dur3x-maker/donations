@@ -5,8 +5,10 @@ from app.models.campaign_completion_report import CampaignCompletionPhoto, Campa
 from app.models.campaign_subscription import CampaignSubscription
 from app.models.campaign_update import CampaignUpdate, CampaignUpdatePhoto
 from app.models.contribution import Contribution, ContributionStatus
+from app.models.contact_request import ContactRequest
 from app.models.notification import Notification, NotificationType
 from app.models.payment import Payment, PaymentStatus
+from app.models.platform_setting import PlatformSetting
 from app.models.report import Report, ReportStatus
 from app.models.suspicious_flag import SuspiciousFlag
 from app.models.telegram_moderation_session import TelegramModerationSession
@@ -27,10 +29,12 @@ __all__ = [
     "CampaignUpdatePhoto",
     "Contribution",
     "ContributionStatus",
+    "ContactRequest",
     "Notification",
     "NotificationType",
     "Payment",
     "PaymentStatus",
+    "PlatformSetting",
     "Report",
     "ReportStatus",
     "SuspiciousFlag",

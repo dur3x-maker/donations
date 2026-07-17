@@ -2,6 +2,8 @@ from collections.abc import AsyncIterator, Callable
 from decimal import Decimal
 import os
 
+os.environ.setdefault("PUBLIC_WEB_URL", "http://test")
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text

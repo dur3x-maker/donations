@@ -4,12 +4,14 @@ import type { RecentDonation } from "@/lib/types";
 
 export function CampaignDonationsList({
   donations,
+  isFundraisingOpen,
   hasMore,
   isLoadingMore,
   newDonationId,
   onLoadMore,
 }: {
   donations: RecentDonation[];
+  isFundraisingOpen: boolean;
   hasMore: boolean;
   isLoadingMore: boolean;
   newDonationId: string | null;
@@ -29,7 +31,9 @@ export function CampaignDonationsList({
           ))
         ) : (
           <p className="text-sm leading-6 text-stone-600">
-            Станьте первым человеком, который поддержит этот сбор. Даже небольшой первый вклад оживляет страницу.
+            {isFundraisingOpen
+              ? "Станьте первым человеком, который поддержит этот сбор. Даже небольшой первый вклад оживляет страницу."
+              : "У этой истории нет публичных записей об участниках."}
           </p>
         )}
       </div>

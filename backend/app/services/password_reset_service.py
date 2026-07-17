@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.public_urls import build_public_web_url
 from app.core.security import hash_password
 from app.db.base import utcnow
 from app.integrations.email_sender import EmailSender
@@ -46,7 +47,7 @@ class PasswordResetService:
     async def _send(self, user: User) -> None:
         if not user.password_reset_token:
             return
-        reset_url = f"{settings.frontend_public_url.rstrip('/')}/reset-password?token={user.password_reset_token}"
+        reset_url = build_public_web_url("/reset-password", {"token": user.password_reset_token})
         try:
             await self.email_sender.send(
                 user.email,

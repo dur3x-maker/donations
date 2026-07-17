@@ -165,6 +165,7 @@ export type ContactSubject =
 export type ContactRequestInput = {
   name: string;
   email: string;
+  telegram?: string;
   subject: ContactSubject;
   message: string;
 };

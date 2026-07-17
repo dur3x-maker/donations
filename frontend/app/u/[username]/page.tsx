@@ -1,4 +1,5 @@
 import { CampaignCard } from "@/app/components/CampaignCard";
+import { ProfileHero } from "@/components/profile-hero";
 import { fetchPublicProfile } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
 
@@ -27,29 +28,20 @@ export default async function PublicProfilePage({ params }: { params: { username
 
   return (
     <section className="pb-12 md:pb-20">
-      <header className="bg-stone-950 p-6 text-white md:p-10">
-        <div className="grid gap-6 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
-          <ProfileAvatar name={displayName} username={profile.username} avatarUrl={profile.avatar_url} />
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="min-w-0 break-words text-3xl font-semibold tracking-tight [overflow-wrap:anywhere] md:text-5xl">{displayName}</h1>
-              {profile.is_verified ? <span className="border-l border-emerald-300 pl-3 text-xs font-semibold text-emerald-200">Проверенный пользователь</span> : null}
-            </div>
-            <p className="mt-2 break-words text-lg font-medium text-stone-300 [overflow-wrap:anywhere]">@{profile.username}</p>
-            <div className="mt-4 flex flex-wrap gap-2 text-sm text-stone-200">
-              <span>С нами с {formatProfileMonth(profile.created_at)}</span>
-              {profile.city ? <span className="break-words [overflow-wrap:anywhere]">· {profile.city}</span> : null}
-            </div>
-            {profile.bio ? (
-              <p className="mt-5 max-w-3xl break-words text-lg leading-8 text-stone-100 [overflow-wrap:anywhere]">&ldquo;{profile.bio}&rdquo;</p>
-            ) : (
-              <p className="mt-5 max-w-3xl text-sm leading-6 text-stone-300">Пользователь пока не добавил описание, но его участие и созданные сборы уже видны ниже.</p>
-            )}
-          </div>
-        </div>
-      </header>
+      <ProfileHero
+        name={displayName}
+        username={profile.username}
+        avatarUrl={profile.avatar_url}
+        eyebrow={profile.is_verified ? "Проверенный пользователь" : undefined}
+        metadata={[
+          <>С нами с {formatProfileMonth(profile.created_at)}</>,
+          profile.city ? <span className="break-words [overflow-wrap:anywhere]">· {profile.city}</span> : null,
+        ].filter(Boolean)}
+        description={profile.bio || "Пользователь пока не добавил описание, но его участие и созданные сборы уже видны ниже."}
+        quoteDescription={Boolean(profile.bio)}
+      />
 
-      <section className="editorial-plane editorial-plane-white mt-16 py-14 md:mt-24 md:py-20">
+      <section className="editorial-plane editorial-plane-white py-10 md:py-14">
         <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)]">
           <div className="md:pr-10">
             <p className="text-sm uppercase tracking-[0.16em] text-stone-400">репутация автора</p>
@@ -128,33 +120,8 @@ export default async function PublicProfilePage({ params }: { params: { username
   );
 }
 
-function ProfileAvatar({ name, username, avatarUrl }: { name: string; username: string; avatarUrl?: string | null }) {
-  if (avatarUrl) {
-    return (
-      <div
-        aria-label={`Фото пользователя ${name}`}
-        className="h-28 w-28 rounded-full bg-cover bg-center ring-2 ring-white/20 md:h-36 md:w-36"
-        style={{ backgroundImage: `url(${avatarUrl})` }}
-      />
-    );
-  }
-
-  return (
-    <div
-      aria-label={`Аватар пользователя ${username}`}
-      className="flex h-28 w-28 items-center justify-center rounded-full bg-emerald-200 text-4xl font-semibold text-emerald-950 ring-2 ring-white/20 md:h-36 md:w-36 md:text-5xl"
-    >
-      {initialsFor(name, username)}
-    </div>
-  );
-}
-
 function fullName(firstName?: string | null, lastName?: string | null) {
   return [firstName, lastName].filter(Boolean).join(" ").trim();
-}
-
-function initialsFor(name: string, username: string) {
-  return (name || username).slice(0, 1).toUpperCase();
 }
 
 function formatProfileMonth(value: string) {

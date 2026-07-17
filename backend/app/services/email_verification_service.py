@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.public_urls import build_public_web_url
 from app.integrations.email_sender import EmailSender
 from app.models.user import User
 
@@ -45,7 +46,7 @@ class EmailVerificationService:
     async def _send(self, user: User) -> None:
         if not user.verification_token:
             return
-        verify_url = f"{settings.frontend_public_url.rstrip('/')}/verify-email?token={user.verification_token}"
+        verify_url = build_public_web_url("/verify-email", {"token": user.verification_token})
         try:
             await self.email_sender.send(
                 user.email,

@@ -1,9 +1,10 @@
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 from app.api.deps import require_current_user
+from app.core.public_urls import build_public_web_url
 from app.models.user import User
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
@@ -21,7 +22,6 @@ MAX_IMAGE_SIZE = 10 * 1024 * 1024
 
 @router.post("/campaign-cover")
 async def upload_campaign_cover(
-    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(require_current_user),
 ) -> dict[str, str]:
@@ -32,13 +32,11 @@ async def upload_campaign_cover(
     path = UPLOAD_DIR / filename
     path.write_bytes(content)
 
-    base_url = str(request.base_url).rstrip("/")
-    return {"url": f"{base_url}/uploads/campaign-covers/{filename}"}
+    return {"url": build_public_web_url(f"/uploads/campaign-covers/{filename}")}
 
 
 @router.post("/story-photo")
 async def upload_story_photo(
-    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(require_current_user),
 ) -> dict[str, str]:
@@ -47,13 +45,11 @@ async def upload_story_photo(
     STORY_PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     filename = f"{uuid4().hex}{extension}"
     (STORY_PHOTO_DIR / filename).write_bytes(content)
-    base_url = str(request.base_url).rstrip("/")
-    return {"url": f"{base_url}/uploads/story-photos/{filename}"}
+    return {"url": build_public_web_url(f"/uploads/story-photos/{filename}")}
 
 
 @router.post("/avatar")
 async def upload_avatar(
-    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(require_current_user),
 ) -> dict[str, str]:
@@ -62,8 +58,7 @@ async def upload_avatar(
     AVATAR_DIR.mkdir(parents=True, exist_ok=True)
     filename = f"{current_user.id}-{uuid4().hex}{extension}"
     (AVATAR_DIR / filename).write_bytes(content)
-    base_url = str(request.base_url).rstrip("/")
-    return {"url": f"{base_url}/uploads/avatars/{filename}"}
+    return {"url": build_public_web_url(f"/uploads/avatars/{filename}")}
 
 
 async def _read_valid_image(file: UploadFile) -> tuple[str, bytes]:

@@ -38,6 +38,7 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
   const [authorReputation, setAuthorReputation] = useState<AuthorReputation | null>(null);
   const [newDonationId, setNewDonationId] = useState<string | null>(null);
   const [amount, setAmount] = useState(String(MIN_DONATION_AMOUNT));
+  const [isAnonymousDonation, setIsAnonymousDonation] = useState(false);
   const [paymentState, setPaymentState] = useState<"idle" | "processing" | "success" | "failed">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [wsMessage, setWsMessage] = useState<string | null>(null);
@@ -63,11 +64,8 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
   const [withdrawalInfo, setWithdrawalInfo] = useState<WithdrawalInfo | null>(null);
   const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
   const isOwner = user?.id === campaign.owner_id;
-  const isCompleted = campaign.status === "COMPLETED";
-  const canDonate = campaign.status === "ACTIVE" && Number(campaign.current_amount) < Number(campaign.target_amount);
-  const donationHint = isCompleted
-    ? "История завершена. Спасибо всем участникам."
-    : "Сбор достиг цели. Сейчас автор готовит итоговый отчет.";
+  const hasReachedTarget = Number(campaign.current_amount) >= Number(campaign.target_amount);
+  const canDonate = campaign.status === "ACTIVE" && !hasReachedTarget;
   const amountNumber = Number(amount);
   const remainingAmount = amountLeft(campaign.current_amount, campaign.target_amount);
 
@@ -182,26 +180,37 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
     }
     if (!canDonate) {
       setPaymentState("failed");
-      setMessage(donationHint);
+      setMessage("Сбор завершён. Новые пожертвования больше не принимаются.");
       return;
     }
     setMessage(null);
     setPaymentState("processing");
 
     try {
-      const anonymousToken = localStorage.getItem("anonymous_token") ?? undefined;
-      const result = await donate(campaign.id, {
-        amount: Number(amount),
-        anonymous_token: anonymousToken,
-      });
+      const donateAnonymously = !user || isAnonymousDonation;
+      const anonymousToken = user ? undefined : localStorage.getItem("anonymous_token") ?? undefined;
+      const result = await donate(
+        campaign.id,
+        {
+          amount: Number(amount),
+          anonymous_token: anonymousToken,
+        },
+        { anonymously: Boolean(user && isAnonymousDonation) },
+      );
 
-      if (result.anonymous_token) {
+      if (result.anonymous_token && !user) {
         localStorage.setItem("anonymous_token", result.anonymous_token);
       }
 
       setPaymentState(result.status === "succeeded" ? "success" : "processing");
-      setMessage(result.status === "succeeded" ? "Спасибо, вклад подтвержден и уже учтен." : "Платеж создан и ожидает подтверждения.");
-      if (user && result.status === "succeeded") {
+      setMessage(
+        result.status === "succeeded"
+          ? donateAnonymously
+            ? "Спасибо, анонимный вклад подтверждён и уже учтён."
+            : "Спасибо, вклад подтвержден и уже учтен."
+          : "Платеж создан и ожидает подтверждения.",
+      );
+      if (user && !donateAnonymously && result.status === "succeeded") {
         setIsSubscribed(true);
         if (result.subscription_created) {
           setSubscriptionMessage("Вы автоматически подписались на обновления этой истории.");
@@ -215,7 +224,9 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
 
   async function handleShare() {
     const url = window.location.href;
-    const text = `Поддержите этот сбор на TipForTea: ${campaign.title}`;
+    const text = canDonate
+      ? `Поддержите этот сбор на TipForTea: ${campaign.title}`
+      : `Завершённая история на TipForTea: ${campaign.title}`;
 
     try {
       if (navigator.share) {
@@ -369,8 +380,12 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
         ) : null}
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">осталось собрать</p>
-            <p className="mt-2 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-5xl">{formatMoney(remainingAmount)}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+              {canDonate ? "осталось собрать" : hasReachedTarget ? "цель достигнута" : "сбор завершён"}
+            </p>
+            <p className="mt-2 text-4xl font-semibold tracking-[-0.035em] text-stone-950 md:text-5xl">
+              {formatMoney(canDonate ? remainingAmount : campaign.current_amount)}
+            </p>
           </div>
           <p className="text-sm text-stone-500">{campaign.contributors_count} человек уже помогли</p>
         </div>
@@ -383,11 +398,15 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
         </div>
       </section>
 
-      {campaign.status !== "ACTIVE" && Number(campaign.current_amount) >= Number(campaign.target_amount) ? (
-        <section className="mx-auto mt-8 max-w-3xl border-y border-amber-200 py-6 md:mt-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">следующий шаг</p>
-          <h2 className="mt-2 text-2xl font-semibold text-stone-950">История достигла цели.</h2>
-          <p className="mt-2 max-w-2xl leading-7 text-stone-700">Средства будут доступны для вывода через банк-партнёр.</p>
+      {!canDonate ? (
+        <section className="mx-auto mt-8 max-w-3xl border-y border-emerald-200 bg-emerald-50/40 py-6 md:mt-12">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-800">сбор завершён</p>
+          <h2 className="mt-2 text-2xl font-semibold text-stone-950">
+            {hasReachedTarget ? "История успешно достигла своей цели." : "История завершена."}
+          </h2>
+          <p className="mt-2 max-w-2xl leading-7 text-stone-700">
+            Спасибо всем участникам, которые помогли сделать это возможным. {campaign.has_completion_report ? "Итоговый отчёт автора доступен ниже." : "Автор подготовит отчёт о результате после завершения проекта."}
+          </p>
         </section>
       ) : null}
 
@@ -395,19 +414,19 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
 
       <FutureUseOfFundsSection items={[]} />
 
-      <section className="relative left-1/2 w-screen -translate-x-1/2 bg-stone-950 px-4 py-16 text-white md:px-6 md:py-20">
-        <div className="mx-auto grid max-w-[980px] gap-10 md:grid-cols-[0.95fr_1.05fr] md:items-center">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">{isOwner ? "публичный вид" : "поддержать"}</p>
-            <h2 className="mt-4 text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
-              {isOwner ? "Так вашу историю смогут поддержать." : "Каждый вклад приближает человека к цели."}
-            </h2>
-            <p className="mt-5 max-w-md text-base leading-7 text-stone-300">
-              {isOwner ? "Вы видите ту же форму, что и посетители страницы. Авторские действия находятся выше и не мешают чтению истории." : "Вы уже знаете эту историю. Остался последний шаг, который может сдвинуть её вперед."}
-            </p>
-          </div>
+      {canDonate ? (
+        <section className="relative left-1/2 w-screen -translate-x-1/2 bg-stone-950 px-4 py-16 text-white md:px-6 md:py-20">
+          <div className="mx-auto grid max-w-[980px] gap-10 md:grid-cols-[0.95fr_1.05fr] md:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">{isOwner ? "публичный вид" : "поддержать"}</p>
+              <h2 className="mt-4 text-4xl font-semibold leading-[1.04] tracking-[-0.03em] md:text-6xl">
+                {isOwner ? "Так вашу историю смогут поддержать." : "Каждый вклад приближает человека к цели."}
+              </h2>
+              <p className="mt-5 max-w-md text-base leading-7 text-stone-300">
+                {isOwner ? "Вы видите ту же форму, что и посетители страницы. Авторские действия находятся выше и не мешают чтению истории." : "Вы уже знаете эту историю. Остался последний шаг, который может сдвинуть её вперед."}
+              </p>
+            </div>
 
-          {canDonate ? (
             <form onSubmit={handleSubmit} className="space-y-5 border-t border-white/20 pt-6">
               <div className="grid grid-cols-3 gap-2">
                 {quickAmounts.map((value) => (
@@ -435,21 +454,35 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
               {amount !== "" && Number.isFinite(amountNumber) && amountNumber < MIN_DONATION_AMOUNT ? (
                 <p className="text-sm text-rose-200">Минимальная сумма поддержки — 100 ₽.</p>
               ) : null}
+              {user ? (
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm leading-6 text-stone-300">
+                  <input
+                    checked={isAnonymousDonation}
+                    className="mt-1 h-4 w-4 shrink-0 accent-emerald-500"
+                    onChange={(event) => setIsAnonymousDonation(event.target.checked)}
+                    type="checkbox"
+                  />
+                  <span>
+                    <span className="font-semibold text-white">Сделать вклад анонимным</span>
+                    <span className="mt-0.5 block text-stone-400">
+                      {isAnonymousDonation ? "Ваше имя не появится в списке участников." : `В списке участников будет указано @${user.username}.`}
+                    </span>
+                  </span>
+                </label>
+              ) : (
+                <div className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm leading-6 text-stone-300">
+                  <p className="font-semibold text-white">Помочь можно без регистрации.</p>
+                  <p className="mt-0.5 text-stone-400">Создавать аккаунт не нужно — вклад будет отображаться среди участников как «Анонимно».</p>
+                </div>
+              )}
               <button className="min-h-14 w-full rounded-full bg-emerald-600 px-5 py-3 text-lg font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-70" disabled={paymentState === "processing"} type="submit">
                 {paymentState === "processing" ? "Отправляем..." : "Поддержать"}
               </button>
               {message ? <p className="break-words text-sm text-stone-200">{message}</p> : null}
             </form>
-          ) : (
-            <section className="border-t border-white/20 py-6">
-              <h3 className="text-2xl font-semibold leading-tight tracking-[-0.02em] text-white">
-                {isCompleted ? "История завершена" : "Сбор достиг цели"}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-stone-300">{donationHint}</p>
-            </section>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      ) : null}
 
       <CompletionReportSection
         campaign={campaign}
@@ -466,6 +499,7 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
 
       <CampaignUpdatesSection
         campaignStatus={campaign.status}
+        showSubscription={canDonate}
         updates={updates}
         isOwner={isOwner}
         isSubscribed={isSubscribed}
@@ -483,9 +517,10 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
         onSubmit={handleUpdateSubmit}
       />
 
-      {wsMessage ? <p className="mx-auto max-w-3xl border-y border-amber-200 bg-amber-50/60 py-3 text-sm text-amber-900">{wsMessage}</p> : null}
+      {canDonate && wsMessage ? <p className="mx-auto max-w-3xl border-y border-amber-200 bg-amber-50/60 py-3 text-sm text-amber-900">{wsMessage}</p> : null}
       <CampaignDonationsList
         donations={donations}
+        isFundraisingOpen={canDonate}
         hasMore={hasMoreDonations}
         isLoadingMore={isLoadingMoreDonations}
         newDonationId={newDonationId}
@@ -502,6 +537,7 @@ export function CampaignClient({ initialCampaign }: { initialCampaign: CampaignD
         onShare={handleShare}
         onReport={() => setIsReportOpen(true)}
         isOwner={isOwner}
+        isFundraisingOpen={canDonate}
       />
 
       {isReportOpen ? (
@@ -749,19 +785,23 @@ function ShareSection({
   onShare,
   onReport,
   isOwner,
+  isFundraisingOpen,
 }: {
   shareMessage: string | null;
   reportMessage: string | null;
   onShare: () => void;
   onReport: () => void;
   isOwner: boolean;
+  isFundraisingOpen: boolean;
 }) {
   return (
     <section className="editorial-plane editorial-plane-white mx-auto max-w-3xl py-14 md:py-20">
       <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
         <div>
-          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-stone-950">Поделиться сбором</h2>
-          <p className="mt-2 text-sm leading-6 text-stone-600">Иногда один репост приводит человека, который сможет помочь.</p>
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] text-stone-950">{isFundraisingOpen ? "Поделиться сбором" : "Поделиться завершённой историей"}</h2>
+          <p className="mt-2 text-sm leading-6 text-stone-600">
+            {isFundraisingOpen ? "Иногда один репост приводит человека, который сможет помочь." : "Сохраните ссылку или расскажите другим о результате этой истории."}
+          </p>
         </div>
         <div className="flex flex-wrap gap-3">
           <button onClick={onShare} className="rounded-full bg-stone-950 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700" type="button">
@@ -827,6 +867,7 @@ function clearPendingPhotos(photos: PendingPhoto[]) {
 
 function CampaignUpdatesSection({
   campaignStatus,
+  showSubscription,
   updates,
   isOwner,
   isSubscribed,
@@ -844,6 +885,7 @@ function CampaignUpdatesSection({
   onSubmit,
 }: {
   campaignStatus: CampaignDetail["status"];
+  showSubscription: boolean;
   updates: CampaignUpdateItem[];
   isOwner: boolean;
   isSubscribed: boolean;
@@ -943,7 +985,7 @@ function CampaignUpdatesSection({
         )}
       </div>
 
-      {!isOwner ? (
+      {!isOwner && showSubscription ? (
         <div className="mt-8 border-t border-stone-200 pt-6">
           <p className="font-semibold text-stone-950">
             {isSubscribed ? "Вы следите за этой историей" : "Получайте новые обновления этой истории"}

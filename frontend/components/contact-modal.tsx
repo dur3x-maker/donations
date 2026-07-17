@@ -6,6 +6,7 @@ import type { AuthUser, ContactSubject } from "@/lib/types";
 
 const subjects: ContactSubject[] = ["Общий вопрос", "Сообщить об ошибке", "Предложение", "Проблема со сбором", "Другое"];
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const telegramPattern = /^(?:@|(?:https?:\/\/)?t\.me\/)[A-Za-z0-9_]{5,32}\/?$/i;
 
 type ContactModalProps = {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export function ContactModal({ isOpen, onClose, user }: ContactModalProps) {
   const [form, setForm] = useState({
     name: "",
     email: "",
+    telegram: "",
     subject: subjects[0],
     message: "",
   });
@@ -104,6 +106,15 @@ export function ContactModal({ isOpen, onClose, user }: ContactModalProps) {
                 <ContactInput label="Email" value={form.email} onChange={(value) => setForm((current) => ({ ...current, email: value }))} type="email" maxLength={255} />
               </div>
 
+              <ContactInput
+                label="Telegram (необязательно)"
+                value={form.telegram}
+                onChange={(value) => setForm((current) => ({ ...current, telegram: value }))}
+                maxLength={64}
+                placeholder="@username или t.me/username"
+                required={false}
+              />
+
               <label className="block">
                 <span className="text-sm font-semibold text-stone-700">Тема</span>
                 <select
@@ -137,7 +148,7 @@ export function ContactModal({ isOpen, onClose, user }: ContactModalProps) {
               {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-800">{error}</p> : null}
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm leading-6 text-stone-500">Все поля обязательны.</p>
+                <p className="text-sm leading-6 text-stone-500">Все поля, кроме Telegram, обязательны.</p>
                 <button className="rounded-full bg-stone-950 px-6 py-3 font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60" disabled={!canSubmit} type="submit">
                   {status === "sending" ? "Отправляем..." : "Отправить"}
                 </button>
@@ -150,7 +161,23 @@ export function ContactModal({ isOpen, onClose, user }: ContactModalProps) {
   );
 }
 
-function ContactInput({ label, value, onChange, type = "text", maxLength }: { label: string; value: string; onChange: (value: string) => void; type?: string; maxLength: number }) {
+function ContactInput({
+  label,
+  value,
+  onChange,
+  type = "text",
+  maxLength,
+  placeholder,
+  required = true,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  maxLength: number;
+  placeholder?: string;
+  required?: boolean;
+}) {
   return (
     <label className="block">
       <span className="text-sm font-semibold text-stone-700">{label}</span>
@@ -159,16 +186,18 @@ function ContactInput({ label, value, onChange, type = "text", maxLength }: { la
         onChange={(event) => onChange(event.target.value)}
         type={type}
         maxLength={maxLength}
+        placeholder={placeholder}
         className="mt-2 w-full rounded-2xl border border-stone-200 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-        required
+        required={required}
       />
     </label>
   );
 }
 
-function validateForm(form: { name: string; email: string; subject: ContactSubject; message: string }) {
-  if (!form.name.trim() || !form.email.trim() || !form.subject || !form.message.trim()) return "Заполните все поля.";
+function validateForm(form: { name: string; email: string; telegram: string; subject: ContactSubject; message: string }) {
+  if (!form.name.trim() || !form.email.trim() || !form.subject || !form.message.trim()) return "Заполните все обязательные поля.";
   if (!emailPattern.test(form.email)) return "Укажите корректный email.";
+  if (form.telegram.trim() && !telegramPattern.test(form.telegram.trim())) return "Укажите Telegram как @username или t.me/username.";
   if (form.message.trim().length < 20) return "Сообщение должно быть не короче 20 символов.";
   if (form.message.length > 3000) return "Сообщение должно быть не длиннее 3000 символов.";
   return null;

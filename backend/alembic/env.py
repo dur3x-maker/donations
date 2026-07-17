@@ -10,8 +10,10 @@ from app.models.activity import Activity
 from app.models.bank_account_application import BankAccountApplication
 from app.models.campaign import Campaign
 from app.models.contribution import Contribution
+from app.models.contact_request import ContactRequest
 from app.models.notification import Notification
 from app.models.payment import Payment
+from app.models.platform_setting import PlatformSetting
 from app.models.report import Report
 from app.models.suspicious_flag import SuspiciousFlag
 from app.models.telegram_moderation_session import TelegramModerationSession

@@ -1,7 +1,9 @@
 from app.api.v1 import uploads
+from app.core.config import settings
 
 
 async def test_story_photo_upload_accepts_image(client, user_factory, auth_headers, tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "public_web_url", "https://test.digitalgardens.online")
     user = await user_factory()
     monkeypatch.setattr(uploads, "STORY_PHOTO_DIR", tmp_path)
     response = await client.post(
@@ -10,6 +12,7 @@ async def test_story_photo_upload_accepts_image(client, user_factory, auth_heade
         headers=auth_headers(user),
     )
     assert response.status_code == 200
+    assert response.json()["url"].startswith("https://test.digitalgardens.online/uploads/story-photos/")
     assert response.json()["url"].endswith(".png")
     assert len(list(tmp_path.iterdir())) == 1
 

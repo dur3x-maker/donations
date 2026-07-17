@@ -12,6 +12,7 @@ import { ProgressBar } from "./ProgressBar";
 
 type LivingGoalsCarouselProps = {
   campaigns: CampaignListItem[];
+  excludedCampaignId?: string;
 };
 
 const DRAG_THRESHOLD_PX = 12;
@@ -26,7 +27,7 @@ const categoryLabels: Record<string, string> = {
   other: "другое",
 };
 
-export function LivingGoalsCarousel({ campaigns: initialCampaigns }: LivingGoalsCarouselProps) {
+export function LivingGoalsCarousel({ campaigns: initialCampaigns, excludedCampaignId }: LivingGoalsCarouselProps) {
   const router = useRouter();
   const trackRef = useRef<HTMLDivElement | null>(null);
   const dragStartX = useRef(0);
@@ -38,8 +39,14 @@ export function LivingGoalsCarousel({ campaigns: initialCampaigns }: LivingGoals
   const [wsStatus, setWsStatus] = useState<RealtimeStatus>("disconnected");
 
   const refresh = useCallback(async () => {
-    setCampaigns(await fetchCampaigns({ page_size: initialCampaigns.length || 7 }));
-  }, [initialCampaigns.length]);
+    const requestedCount = Math.max(initialCampaigns.length + (excludedCampaignId ? 1 : 0), 7);
+    const refreshedCampaigns = await fetchCampaigns({ page_size: requestedCount });
+    setCampaigns(
+      refreshedCampaigns
+        .filter((campaign) => campaign.id !== excludedCampaignId)
+        .slice(0, initialCampaigns.length || 7)
+    );
+  }, [excludedCampaignId, initialCampaigns.length]);
 
   useLiveRefresh(refresh, wsStatus === "connected");
 

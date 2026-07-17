@@ -108,14 +108,20 @@ function redirectToLogin() {
   }
 }
 
-export async function request<T>(path: string, init?: RequestInit, retry = true): Promise<T> {
+type RequestOptions = {
+  retry?: boolean;
+  includeAuth?: boolean;
+};
+
+export async function request<T>(path: string, init?: RequestInit, options: RequestOptions = {}): Promise<T> {
+  const { retry = true, includeAuth = true } = options;
   const headers = new Headers(init?.headers);
   if (!headers.has("Content-Type") && init?.body) {
     headers.set("Content-Type", "application/json");
   }
 
   const accessToken = getStoredAccessToken();
-  if (accessToken) {
+  if (includeAuth && accessToken) {
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
@@ -130,10 +136,10 @@ export async function request<T>(path: string, init?: RequestInit, retry = true)
     throw new Error("Не получилось связаться с сервером. Проверьте соединение и попробуйте еще раз.");
   }
 
-  if (response.status === 401 && retry && typeof window !== "undefined") {
+  if (response.status === 401 && includeAuth && retry && typeof window !== "undefined") {
     const newAccessToken = await refreshStoredAuth();
     if (newAccessToken) {
-      return request<T>(path, init, false);
+      return request<T>(path, init, { retry: false, includeAuth });
     }
     redirectToLogin();
   }
@@ -186,6 +192,10 @@ export function fetchCompletedCampaigns(params?: { page?: number; page_size?: nu
 
 export function fetchPlatformStats() {
   return request<PlatformStats>("/api/v1/platform/stats");
+}
+
+export function fetchFeaturedCampaign() {
+  return request<CampaignListItem | null>("/api/v1/platform/featured-campaign");
 }
 
 export function sendContactRequest(body: ContactRequestInput) {
@@ -358,11 +368,11 @@ export function updateCampaign(campaignId: string, body: CampaignUpdateInput) {
   });
 }
 
-export function donate(campaignId: string, body: { amount: number; anonymous_token?: string }) {
+export function donate(campaignId: string, body: { amount: number; anonymous_token?: string }, options?: { anonymously?: boolean }) {
   return request<DonateResponse>(`/api/v1/campaigns/${campaignId}/donate`, {
     method: "POST",
     body: JSON.stringify(body),
-  });
+  }, { includeAuth: !options?.anonymously });
 }
 
 export function reportCampaign(campaignId: string, body: { reason: string; details?: string }) {
@@ -412,7 +422,7 @@ export function verifyEmail(token: string) {
   return request<AuthUser>("/api/v1/auth/verify-email", {
     method: "POST",
     body: JSON.stringify({ token }),
-  }, false);
+  }, { retry: false });
 }
 
 export function resendEmailVerification() {
@@ -423,28 +433,28 @@ export function forgotPassword(email: string) {
   return request<{ message: string }>("/api/v1/auth/forgot-password", {
     method: "POST",
     body: JSON.stringify({ email }),
-  }, false);
+  }, { retry: false });
 }
 
 export function resetPassword(body: { token: string; password: string }) {
   return request<AuthResponse>("/api/v1/auth/reset-password", {
     method: "POST",
     body: JSON.stringify(body),
-  }, false);
+  }, { retry: false });
 }
 
 export function loginRequest(body: { email: string; password: string }) {
   return request<AuthResponse>("/api/v1/auth/login", {
     method: "POST",
     body: JSON.stringify(body),
-  }, false);
+  }, { retry: false });
 }
 
 export function registerRequest(body: { email: string; username: string; password: string }) {
   return request<AuthResponse>("/api/v1/auth/register", {
     method: "POST",
     body: JSON.stringify(body),
-  }, false);
+  }, { retry: false });
 }
 
 export function linkAnonymousContributions(anonymousToken: string) {

@@ -38,7 +38,7 @@ CLI создаёт 8 активных и 3 завершённых истории
 /app/uploads/demo_showcase_v1
 ```
 
-В Docker Compose это постоянный volume `backend_uploads:/app/uploads`, поэтому файлы сохраняются после пересборки контейнера. В БД записываются публичные URL вида `<DEMO_PUBLIC_BASE_URL>/uploads/demo_showcase_v1/<file>`.
+В Docker Compose это постоянный volume `backend_uploads:/app/uploads`, поэтому файлы сохраняются после пересборки контейнера. В БД записываются публичные URL вида `<PUBLIC_WEB_URL>/uploads/demo_showcase_v1/<file>`.
 
 Фотографии Unsplash иллюстративные и не изображают героев вымышленных историй. Это также указано в тексте каждой кампании.
 
@@ -78,7 +78,7 @@ docker-compose ps
 3. Убедиться, что `APP_ENV=staging` (или `test`) и публичный origin задан корректно:
 
 ```bash
-docker-compose exec -T backend sh -lc 'printf "APP_ENV=%s\nDEMO_PUBLIC_BASE_URL=%s\n" "$APP_ENV" "$DEMO_PUBLIC_BASE_URL"'
+docker-compose exec -T backend sh -lc 'printf "APP_ENV=%s\nPUBLIC_WEB_URL=%s\n" "$APP_ENV" "$PUBLIC_WEB_URL"'
 ```
 
 4. Проверить план без пароля и без изменений:

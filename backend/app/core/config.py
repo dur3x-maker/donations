@@ -1,7 +1,7 @@
 from functools import lru_cache
 from urllib.parse import urlparse
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     telegram_bot_token: str | None = None
     telegram_chat_id: str | None = None
     telegram_webhook_secret: str | None = None
-    frontend_public_url: str = "http://localhost:3000"
+    public_web_url: str
     smtp_host: str | None = None
     smtp_port: int = 587
     smtp_username: str | None = None
@@ -30,6 +30,22 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @field_validator("public_web_url")
+    @classmethod
+    def normalize_public_web_url(cls, value: str) -> str:
+        normalized = value.strip().rstrip("/")
+        parsed = urlparse(normalized)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.netloc
+            or parsed.path not in {"", "/"}
+            or parsed.params
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError("PUBLIC_WEB_URL must be an absolute http(s) origin without a path")
+        return normalized
 
     @model_validator(mode="after")
     def validate_production_settings(self) -> "Settings":
@@ -51,6 +67,7 @@ class Settings(BaseSettings):
             errors.extend(_validate_public_origin(origin, "BACKEND_CORS_ORIGINS"))
         for origin in self.ws_origins:
             errors.extend(_validate_public_origin(origin, "TRUSTED_WS_ORIGINS"))
+        errors.extend(_validate_public_origin(self.public_web_url, "PUBLIC_WEB_URL"))
         if self.ws_max_connections_per_ip < 1:
             errors.append("WS_MAX_CONNECTIONS_PER_IP must be greater than 0")
 
@@ -73,10 +90,10 @@ def _normalize_origin(origin: str) -> str:
 
 def _validate_public_origin(origin: str, field_name: str) -> list[str]:
     parsed = urlparse(origin)
-    if parsed.scheme != "https" or not parsed.netloc or parsed.path not in {"", "/"}:
-        return [f"{field_name} origin must be an https origin without path: {origin}"]
     if parsed.hostname in LOCAL_HOSTS:
         return [f"{field_name} must not use localhost in production: {origin}"]
+    if parsed.scheme != "https" or not parsed.netloc or parsed.path not in {"", "/"}:
+        return [f"{field_name} origin must be an https origin without path: {origin}"]
     return []
 
 

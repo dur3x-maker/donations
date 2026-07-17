@@ -5,6 +5,7 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from app.core.config import settings
+from app.core.public_urls import build_public_web_url
 from app.integrations.telegram_notifier import TelegramNotifier
 from app.models.campaign import Campaign
 from app.models.report import Report
@@ -51,8 +52,10 @@ def build_contact_event(payload: ContactRequestIn, actor: AdminActor | None = No
         ("Тема", payload.subject.value),
         ("Имя", payload.name),
         ("Email", str(payload.email)),
-        ("Сообщение", payload.message),
     ]
+    if payload.telegram:
+        sections.append(("Telegram", payload.telegram))
+    sections.append(("Сообщение", payload.message))
     return AdminEvent(
         type=AdminEventType.contact_request,
         title="📩 Новое обращение",
@@ -114,11 +117,10 @@ def build_high_value_campaign_event(campaign: Campaign, owner: User) -> AdminEve
 
 
 def admin_actor_from_user(user_id: UUID, username: str) -> AdminActor:
-    base_url = settings.frontend_public_url.rstrip("/")
     return AdminActor(
         id=user_id,
         username=username,
-        profile_url=f"{base_url}/u/{username}",
+        profile_url=build_public_web_url(f"/u/{username}"),
     )
 
 
@@ -176,7 +178,7 @@ def _format_telegram_message(event: AdminEvent) -> str:
 
 
 def _campaign_url(campaign_id: UUID) -> str:
-    return f"{settings.frontend_public_url.rstrip('/')}/campaigns/{campaign_id}"
+    return build_public_web_url(f"/campaigns/{campaign_id}")
 
 
 def _format_rub(amount) -> str:
@@ -200,6 +202,7 @@ def _reply_markup_for_event(event: AdminEvent) -> dict | None:
     if not campaign_id:
         return None
     admin_actions = [
+        [{"text": "⭐ Главное промо", "callback_data": "promo:start"}],
         [{"text": "Скрыть сбор", "callback_data": f"admin:archive:{campaign_id}"}],
         [{"text": "Пересчитать сбор", "callback_data": f"admin:recalc:{campaign_id}"}],
     ]

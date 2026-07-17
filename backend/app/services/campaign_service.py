@@ -256,6 +256,31 @@ async def get_contributors_count(session: AsyncSession, campaign_id: UUID) -> in
     return int(count or 0)
 
 
+async def campaign_to_list_item(session: AsyncSession, campaign: Campaign) -> CampaignListItem:
+    return CampaignListItem(
+        id=campaign.id,
+        owner_id=campaign.owner_id,
+        title=campaign.title,
+        description=campaign.description,
+        description_preview=_preview(campaign.description),
+        target_amount=campaign.target_amount,
+        current_amount=campaign.current_amount,
+        category=campaign.category,
+        cover_image_url=campaign.cover_image_url,
+        is_verified=campaign.is_verified,
+        is_active=campaign.is_active,
+        status=campaign.status.value,
+        has_completion_report=campaign.has_completion_report,
+        report_requested_at=campaign.report_requested_at,
+        report_completed_at=campaign.report_completed_at,
+        report_overdue=campaign.report_overdue,
+        created_at=campaign.created_at,
+        progress_percentage=_progress_percentage(campaign),
+        owner=_owner_out(campaign.owner),
+        contributors_count=await get_contributors_count(session, campaign.id),
+    )
+
+
 async def create_campaign(
     session: AsyncSession,
     owner: User,

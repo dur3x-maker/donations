@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fetchActivityFeed, fetchCampaigns, fetchCompletedCampaigns, fetchPlatformStats } from "@/lib/api";
+import { fetchActivityFeed, fetchCampaigns, fetchCompletedCampaigns, fetchFeaturedCampaign, fetchPlatformStats } from "@/lib/api";
 import { ActivityFeed } from "./components/ActivityFeed";
 import { CompletedCampaignCard } from "./components/CompletedCampaignCard";
 import { LandingMotion } from "./components/LandingMotion";
@@ -24,17 +24,20 @@ const homepageFaq = [
 ];
 
 export default async function HomePage() {
-  const [campaigns, completedCampaigns, activities, stats] = await Promise.all([
-    fetchCampaigns({ page_size: 7 }).catch(() => []),
+  const [campaigns, featuredCampaign, completedCampaigns, activities, stats] = await Promise.all([
+    fetchCampaigns({ page_size: 8 }).catch(() => []),
+    fetchFeaturedCampaign().catch(() => null),
     fetchCompletedCampaigns({ page_size: 3 }).catch(() => []),
     fetchActivityFeed({ page_size: 5 }).catch(() => []),
     fetchPlatformStats().catch(() => null),
   ]);
-  const homepageCampaigns = campaigns.slice(0, 7);
+  const homepageCampaigns = campaigns
+    .filter((campaign) => campaign.id !== featuredCampaign?.id)
+    .slice(0, 7);
 
   return (
     <div className="pb-12 md:pb-20">
-      <LandingMotion stats={stats} featuredCampaign={homepageCampaigns[0] ?? null} />
+      <LandingMotion stats={stats} featuredCampaign={featuredCampaign} />
 
       <section id="campaigns" className="mt-20 scroll-mt-24 md:mt-32">
         <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -49,7 +52,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <LivingGoalsCarousel campaigns={homepageCampaigns} />
+        <LivingGoalsCarousel campaigns={homepageCampaigns} excludedCampaignId={featuredCampaign?.id} />
       </section>
 
       <TrustCultureSection />

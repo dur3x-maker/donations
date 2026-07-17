@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CampaignCard } from "@/app/components/CampaignCard";
+import { ProfileHero } from "@/components/profile-hero";
 import { useAuth } from "@/components/providers/auth-provider";
 import { fetchProfileImpact, fetchProfileSummary, fetchPublicProfile, fetchUserAchievements, resendEmailVerification, updateProfile, uploadAvatar } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
@@ -129,28 +130,24 @@ export default function ProfilePage() {
   };
 
   return (
-    <section className="mx-auto max-w-6xl pb-12 md:pb-20">
-      <header className="relative left-1/2 -mt-7 w-screen -translate-x-1/2 bg-stone-950 px-4 py-8 text-white md:-mt-12 md:px-8 lg:static lg:mt-0 lg:w-auto lg:translate-x-0 lg:p-8">
-        <div className="mx-auto grid max-w-6xl gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
-          <ProfileAvatar name={displayName} username={user.username} avatarUrl={profileForm.avatar_url || user.avatar_url} />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">ваш профиль</p>
-            <h1 className="mt-3 break-words text-4xl font-semibold tracking-tight [overflow-wrap:anywhere] md:text-5xl">{displayName}</h1>
-            <p className="mt-2 break-words text-lg font-medium text-stone-300 [overflow-wrap:anywhere]">@{user.username}</p>
-            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm text-stone-200">
-              {user.is_verified ? <span className="font-semibold text-emerald-200">Email подтверждён</span> : null}
-              <span>С нами с {formatMonth(user.created_at)}</span>
-              {user.city ? <span className="break-words [overflow-wrap:anywhere]">{user.city}</span> : null}
-            </div>
-            <p className="mt-5 max-w-2xl break-words text-base leading-7 text-stone-100 [overflow-wrap:anywhere]">
-              {user.bio || "Расскажите немного о себе: чем занимаетесь, почему вы на платформе и что для вас значит взаимопомощь."}
-            </p>
-            <Link href={`/u/${user.username}`} className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-emerald-200 underline decoration-emerald-200/30 underline-offset-4 hover:decoration-emerald-200">
-              Посмотреть публичный профиль →
-            </Link>
-          </div>
-        </div>
-      </header>
+    <section className="pb-12 md:pb-20">
+      <ProfileHero
+        name={displayName}
+        username={user.username}
+        avatarUrl={profileForm.avatar_url || user.avatar_url}
+        eyebrow="ваш профиль"
+        metadata={[
+          user.is_verified ? <span className="font-semibold text-emerald-200">Email подтверждён</span> : null,
+          <>С нами с {formatMonth(user.created_at)}</>,
+          user.city ? <span className="break-words [overflow-wrap:anywhere]">{user.city}</span> : null,
+        ].filter(Boolean)}
+        description={user.bio || "Расскажите немного о себе: чем занимаетесь, почему вы на платформе и что для вас значит взаимопомощь."}
+        action={
+          <Link href={`/u/${user.username}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-emerald-200 underline decoration-emerald-200/30 underline-offset-4 hover:decoration-emerald-200">
+            Посмотреть публичный профиль →
+          </Link>
+        }
+      />
 
       <details className="group mt-5 border-b border-stone-200 md:mt-7">
         <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 [&::-webkit-details-marker]:hidden">
@@ -386,27 +383,6 @@ function relativeTime(value: string) {
 
 function formatMonth(value: string) {
   return new Intl.DateTimeFormat("ru-RU", { month: "long", year: "numeric" }).format(new Date(value));
-}
-
-function ProfileAvatar({ name, username, avatarUrl }: { name: string; username: string; avatarUrl?: string | null }) {
-  if (avatarUrl) {
-    return (
-      <div
-        aria-label={`Фото пользователя ${name}`}
-        className="h-24 w-24 rounded-full bg-cover bg-center ring-2 ring-white/20 sm:h-28 sm:w-28 md:h-32 md:w-32"
-        style={{ backgroundImage: `url(${avatarUrl})` }}
-      />
-    );
-  }
-
-  return (
-    <div
-      aria-label={`Аватар пользователя ${username}`}
-      className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-200 text-4xl font-semibold text-emerald-950 ring-2 ring-white/20 sm:h-28 sm:w-28 md:h-32 md:w-32"
-    >
-      {(name || username).slice(0, 1).toUpperCase()}
-    </div>
-  );
 }
 
 function ProfileInput({ label, value, onChange, maxLength }: { label: string; value: string; onChange: (value: string) => void; maxLength: number }) {

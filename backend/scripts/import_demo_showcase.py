@@ -149,11 +149,9 @@ def validate_environment(app_env: str, database_name: str) -> None:
 
 
 def resolve_public_base_url(app_env: str, explicit_value: str | None = None) -> str:
-    value = explicit_value or os.getenv("DEMO_PUBLIC_BASE_URL")
-    if not value and app_env.strip().lower() in {"dev", "development", "local", "test", "testing"}:
-        value = "http://localhost:8000"
+    value = explicit_value or os.getenv("PUBLIC_WEB_URL")
     if not value:
-        raise SafetyError("DEMO_PUBLIC_BASE_URL is required for staging imports")
+        raise SafetyError("PUBLIC_WEB_URL is required")
     parsed = urlparse(value)
     if (
         parsed.scheme not in {"http", "https"}
@@ -163,7 +161,7 @@ def resolve_public_base_url(app_env: str, explicit_value: str | None = None) -> 
         or parsed.query
         or parsed.fragment
     ):
-        raise SafetyError("DEMO_PUBLIC_BASE_URL must be an absolute http(s) origin without a path")
+        raise SafetyError("PUBLIC_WEB_URL must be an absolute http(s) origin without a path")
     if app_env.strip().lower() in {"stage", "staging"} and parsed.scheme != "https":
         raise SafetyError("Staging showcase images must use an https public base URL")
     return value.rstrip("/")
