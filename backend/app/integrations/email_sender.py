@@ -1,5 +1,6 @@
 import asyncio
 from email.message import EmailMessage
+from email.utils import formatdate, make_msgid
 import logging
 import smtplib
 
@@ -39,6 +40,8 @@ class EmailSender:
         message["From"] = self.from_email
         message["To"] = to_email
         message["Subject"] = subject
+        message["Date"] = formatdate(localtime=False)
+        message["Message-ID"] = make_msgid()
         message.set_content(body)
 
         with smtplib.SMTP(self.host, self.port, timeout=10) as smtp:
