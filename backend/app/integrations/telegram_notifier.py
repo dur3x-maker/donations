@@ -2,7 +2,9 @@ import asyncio
 import json
 import logging
 from urllib import request
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
+
+from app.core.logging import log_event
 
 logger = logging.getLogger("telegram")
 
@@ -19,7 +21,15 @@ class TelegramNotifier:
     async def send_message(self, text: str, reply_markup: dict | None = None, chat_id: str | int | None = None) -> None:
         target_chat_id = chat_id or self.chat_id
         if not self.bot_token or not target_chat_id:
-            logger.info("telegram_notifier_skipped reason=not_configured")
+            log_event(
+                logger,
+                logging.INFO,
+                "telegram_api_trace",
+                step="send_message_skipped",
+                reason="not_configured",
+                bot_token_configured=bool(self.bot_token),
+                chat_id=str(target_chat_id or ""),
+            )
             return
 
         await asyncio.to_thread(self._send_message_sync, text, reply_markup, target_chat_id)
@@ -71,6 +81,18 @@ class TelegramNotifier:
     def _request_sync(self, method: str, payload: dict) -> None:
         url = f"https://api.telegram.org/bot{self.bot_token}/{method}"
         data = json.dumps(payload).encode("utf-8")
+        log_event(
+            logger,
+            logging.INFO,
+            "telegram_api_trace",
+            step="request_start",
+            method=method,
+            chat_id=str(payload.get("chat_id") or ""),
+            message_id=payload.get("message_id"),
+            callback_query_id=str(payload.get("callback_query_id") or ""),
+            text_length=len(str(payload.get("text") or "")),
+            has_reply_markup="reply_markup" in payload,
+        )
         http_request = request.Request(
             url,
             data=data,
@@ -80,7 +102,36 @@ class TelegramNotifier:
 
         try:
             with request.urlopen(http_request, timeout=10) as response:
+                response_payload = json.loads(response.read().decode("utf-8"))
+                log_event(
+                    logger,
+                    logging.INFO,
+                    "telegram_api_trace",
+                    step="request_completed",
+                    method=method,
+                    chat_id=str(payload.get("chat_id") or ""),
+                    status=response.status,
+                    telegram_ok=response_payload.get("ok"),
+                )
                 if response.status >= 400:
                     logger.warning("telegram_request_failed method=%s status=%s", method, response.status)
-        except URLError:
-            logger.exception("telegram_request_failed method=%s", method)
+        except HTTPError as exc:
+            try:
+                error_payload = json.loads(exc.read().decode("utf-8"))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                error_payload = {}
+            logger.exception(
+                "telegram_request_failed method=%s chat_id=%s status=%s error_code=%s description=%s",
+                method,
+                str(payload.get("chat_id") or ""),
+                exc.code,
+                error_payload.get("error_code"),
+                error_payload.get("description"),
+            )
+        except URLError as exc:
+            logger.exception(
+                "telegram_request_failed method=%s chat_id=%s reason=%s",
+                method,
+                str(payload.get("chat_id") or ""),
+                exc.reason,
+            )

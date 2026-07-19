@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
+from app.core.logging import log_event
 from app.integrations.telegram_notifier import TelegramNotifier
 from app.models.activity import ActivityType
 from app.models.campaign import Campaign, CampaignStatus
@@ -36,19 +37,37 @@ FEATURED_STATES = (FEATURED_USERNAME_STATE, FEATURED_CONFIRMATION_STATE)
 logger = logging.getLogger("telegram_moderation")
 
 
+def _trace(step: str, **fields) -> None:
+    log_event(logger, logging.INFO, "telegram_promo_trace", step=step, **fields)
+
+
 async def handle_telegram_update(
     session: AsyncSession,
     update: dict,
     telegram: TelegramNotifier,
 ) -> None:
     callback_query = update.get("callback_query")
+    message = update.get("message")
+    payload = callback_query or message or {}
+    payload_message = (callback_query or {}).get("message") or message or {}
+    _trace(
+        "update_dispatch",
+        update_id=update.get("update_id"),
+        update_type="callback_query" if callback_query else "message" if message else "unsupported",
+        chat_id=str((payload_message.get("chat") or {}).get("id") or ""),
+        from_id=str((payload.get("from") or {}).get("id") or ""),
+        sender_chat_id=str((payload_message.get("sender_chat") or {}).get("id") or ""),
+        callback_data=str((callback_query or {}).get("data") or ""),
+    )
     if callback_query:
         await _handle_callback_query(session, callback_query, telegram)
         return
 
-    message = update.get("message")
     if message:
         await _handle_message(session, message, telegram)
+        return
+
+    _trace("update_ignored", update_id=update.get("update_id"), reason="unsupported_update_type")
 
 
 async def _handle_callback_query(
@@ -64,13 +83,31 @@ async def _handle_callback_query(
     admin = callback_query.get("from") or {}
     admin_id = str(admin.get("id") or "")
     admin_name = _admin_name(admin)
+    _trace(
+        "callback_received",
+        callback_data=data,
+        callback_id=callback_id,
+        chat_id=chat_id,
+        from_id=admin_id,
+        message_id=message_id,
+    )
 
-    if not _is_admin_chat(chat_id):
+    admin_chat_allowed = _is_admin_chat(chat_id)
+    _trace(
+        "admin_chat_check",
+        source="callback_query",
+        chat_id=chat_id,
+        configured_chat_id=str(settings.telegram_chat_id or ""),
+        allowed=admin_chat_allowed,
+    )
+    if not admin_chat_allowed:
+        _trace("callback_rejected", reason="not_admin_chat", chat_id=chat_id, from_id=admin_id)
         if callback_id:
             await telegram.answer_callback_query(callback_id, "Недостаточно прав.")
         return
 
     if data.startswith(f"{PROMO_ACTION_PREFIX}:"):
+        _trace("promo_callback_enter", callback_data=data, chat_id=chat_id, from_id=admin_id)
         try:
             await _handle_featured_callback(
                 session,
@@ -157,22 +194,45 @@ async def _handle_message(session: AsyncSession, message: dict, telegram: Telegr
     admin = message.get("from") or {}
     admin_id = str(admin.get("id") or "")
     chat_id = str((message.get("chat") or {}).get("id", ""))
+    sender_chat_id = str((message.get("sender_chat") or {}).get("id") or "")
+    _trace(
+        "message_received",
+        chat_id=chat_id,
+        from_id=admin_id,
+        sender_chat_id=sender_chat_id,
+        has_text=bool(text),
+        text_length=len(text),
+    )
     if not text:
+        _trace("message_ignored", reason="empty_text", chat_id=chat_id, from_id=admin_id)
         return
-    if not _is_admin_chat(chat_id):
+    admin_chat_allowed = _is_admin_chat(chat_id)
+    _trace(
+        "admin_chat_check",
+        source="message",
+        chat_id=chat_id,
+        configured_chat_id=str(settings.telegram_chat_id or ""),
+        allowed=admin_chat_allowed,
+    )
+    if not admin_chat_allowed:
+        _trace("message_ignored", reason="not_admin_chat", chat_id=chat_id, from_id=admin_id)
         logger.warning("telegram_admin_message_rejected chat_id=%s admin_id=%s", chat_id, admin_id)
         return
 
     if text in {"/start", "/admin"}:
+        _trace("admin_menu_send", chat_id=chat_id, from_id=admin_id)
         await telegram.send_message(
             "Управление платформой",
             chat_id=chat_id,
             reply_markup=_admin_menu_markup(),
         )
+        _trace("admin_menu_sent", chat_id=chat_id, from_id=admin_id)
         return
 
+    _trace("session_resolution_start", chat_id=chat_id, from_id=admin_id, sender_chat_id=sender_chat_id)
     pending = await _pending_session_for_message(session, admin_id, chat_id)
     if pending is None:
+        _trace("session_resolution_result", chat_id=chat_id, from_id=admin_id, found=False)
         logger.warning(
             "telegram_admin_message_without_session chat_id=%s admin_id=%s sender_chat_id=%s",
             chat_id,
@@ -183,9 +243,26 @@ async def _handle_message(session: AsyncSession, message: dict, telegram: Telegr
             "⚠️ Активный сценарий не найден. Нажмите «⭐ Главное промо» и попробуйте снова.",
             chat_id=chat_id,
         )
+        _trace("telegram_response_requested", chat_id=chat_id, outcome="session_not_found")
         return
 
+    _trace(
+        "session_resolution_result",
+        chat_id=chat_id,
+        from_id=admin_id,
+        found=True,
+        session_id=str(pending.id),
+        session_admin_id=pending.admin_telegram_id,
+        state=pending.state,
+    )
     if pending.state == FEATURED_USERNAME_STATE:
+        _trace(
+            "promo_username_handler_enter",
+            chat_id=chat_id,
+            from_id=admin_id,
+            session_id=str(pending.id),
+            username=text,
+        )
         try:
             await _handle_featured_username(session, pending, text, telegram)
         except Exception:
@@ -233,14 +310,26 @@ async def _pending_session_for_message(
     chat_id: str,
 ) -> TelegramModerationSession | None:
     if admin_id:
+        _trace("session_lookup_by_from_id_start", chat_id=chat_id, from_id=admin_id)
         pending = await session.scalar(
             select(TelegramModerationSession).where(
                 TelegramModerationSession.admin_telegram_id == admin_id
             ).with_for_update()
         )
+        _trace(
+            "session_lookup_by_from_id_result",
+            chat_id=chat_id,
+            from_id=admin_id,
+            found=pending is not None,
+            session_id=str(pending.id) if pending else None,
+            state=pending.state if pending else None,
+        )
         if pending is not None:
             return pending
+    else:
+        _trace("session_lookup_by_from_id_skipped", chat_id=chat_id, reason="missing_from_id")
 
+    _trace("session_lookup_by_chat_id_start", chat_id=chat_id, states=FEATURED_STATES)
     featured_sessions = list(
         await session.scalars(
             select(TelegramModerationSession).where(
@@ -248,6 +337,13 @@ async def _pending_session_for_message(
                 TelegramModerationSession.state.in_(FEATURED_STATES),
             ).with_for_update()
         )
+    )
+    _trace(
+        "session_lookup_by_chat_id_result",
+        chat_id=chat_id,
+        count=len(featured_sessions),
+        session_ids=[str(item.id) for item in featured_sessions],
+        states=[item.state for item in featured_sessions],
     )
     if len(featured_sessions) == 1:
         pending = featured_sessions[0]
@@ -353,8 +449,17 @@ async def _handle_featured_callback(
     telegram: TelegramNotifier,
 ) -> None:
     action = data.split(":", 1)[1] if ":" in data else ""
+    _trace(
+        "promo_callback_handler_enter",
+        action=action,
+        chat_id=chat_id,
+        from_id=admin_id,
+        callback_id=callback_id,
+    )
     if action == "start":
+        _trace("promo_selection_start_requested", chat_id=chat_id, from_id=admin_id)
         await _start_featured_selection(session, chat_id, message_id, admin_id, admin_name, telegram)
+        _trace("promo_selection_start_completed", chat_id=chat_id, from_id=admin_id)
         if callback_id:
             await telegram.answer_callback_query(callback_id)
         return
@@ -375,15 +480,26 @@ async def _handle_featured_callback(
         return
 
     if action != "confirm":
+        _trace("promo_callback_ignored", action=action, reason="unknown_action", chat_id=chat_id)
         if callback_id:
             await telegram.answer_callback_query(callback_id, "Неизвестное действие.")
         return
 
+    _trace("promo_confirmation_session_lookup_start", chat_id=chat_id, from_id=admin_id)
     pending = await session.scalar(
         select(TelegramModerationSession).where(
             TelegramModerationSession.admin_telegram_id == admin_id,
             TelegramModerationSession.state == FEATURED_CONFIRMATION_STATE,
         ).with_for_update()
+    )
+    _trace(
+        "promo_confirmation_session_lookup_result",
+        chat_id=chat_id,
+        from_id=admin_id,
+        found=pending is not None,
+        session_id=str(pending.id) if pending else None,
+        state=pending.state if pending else None,
+        requested_username=pending.requested_username if pending else None,
     )
     if pending is None or not pending.requested_username:
         if callback_id:
@@ -391,8 +507,21 @@ async def _handle_featured_callback(
         return
 
     try:
+        _trace(
+            "featured_campaign_update_start",
+            chat_id=chat_id,
+            session_id=str(pending.id),
+            username=pending.requested_username,
+        )
         await set_featured_campaign_by_username(session, pending.requested_username)
+        _trace(
+            "featured_campaign_update_completed",
+            chat_id=chat_id,
+            session_id=str(pending.id),
+            username=pending.requested_username,
+        )
     except FeaturedCampaignUserNotFoundError:
+        _trace("promo_outcome", chat_id=chat_id, outcome="user_not_found")
         await session.delete(pending)
         await session.commit()
         await telegram.edit_message_text(
@@ -405,6 +534,7 @@ async def _handle_featured_callback(
             await telegram.answer_callback_query(callback_id, "Пользователь не найден.")
         return
     except FeaturedCampaignActiveCampaignNotFoundError:
+        _trace("promo_outcome", chat_id=chat_id, outcome="active_campaign_not_found")
         await session.delete(pending)
         await session.commit()
         await telegram.edit_message_text(
@@ -417,6 +547,7 @@ async def _handle_featured_callback(
             await telegram.answer_callback_query(callback_id, "Нет активной истории.")
         return
     except FeaturedCampaignMultipleActiveCampaignsError:
+        _trace("promo_outcome", chat_id=chat_id, outcome="multiple_active_campaigns")
         await session.delete(pending)
         await session.commit()
         await telegram.edit_message_text(
@@ -429,6 +560,7 @@ async def _handle_featured_callback(
             await telegram.answer_callback_query(callback_id, "Найдено несколько сборов.")
         return
     except FeaturedCampaignAlreadySelectedError:
+        _trace("promo_outcome", chat_id=chat_id, outcome="already_featured")
         await session.delete(pending)
         await session.commit()
         await telegram.edit_message_text(
@@ -443,6 +575,8 @@ async def _handle_featured_callback(
 
     await session.delete(pending)
     await session.commit()
+    _trace("promo_session_deleted", chat_id=chat_id, outcome="success")
+    _trace("telegram_response_send", chat_id=chat_id, method="editMessageText", outcome="success")
     await telegram.edit_message_text(
         chat_id,
         message_id,
@@ -451,6 +585,7 @@ async def _handle_featured_callback(
     )
     if callback_id:
         await telegram.answer_callback_query(callback_id, "Сбор успешно назначен главным.")
+    _trace("promo_outcome", chat_id=chat_id, outcome="success")
 
 
 async def _start_featured_selection(
@@ -461,6 +596,7 @@ async def _start_featured_selection(
     admin_name: str,
     telegram: TelegramNotifier,
 ) -> None:
+    _trace("promo_session_reset_start", chat_id=chat_id, from_id=admin_id)
     await session.execute(
         delete(TelegramModerationSession).where(
             (TelegramModerationSession.admin_telegram_id == admin_id)
@@ -470,17 +606,30 @@ async def _start_featured_selection(
             )
         )
     )
-    session.add(
-        TelegramModerationSession(
-            campaign_id=None,
-            chat_id=chat_id,
-            message_id=message_id,
-            admin_telegram_id=admin_id,
-            admin_name=admin_name,
-            state=FEATURED_USERNAME_STATE,
-        )
+    pending = TelegramModerationSession(
+        campaign_id=None,
+        chat_id=chat_id,
+        message_id=message_id,
+        admin_telegram_id=admin_id,
+        admin_name=admin_name,
+        state=FEATURED_USERNAME_STATE,
+    )
+    session.add(pending)
+    _trace(
+        "promo_session_added",
+        chat_id=chat_id,
+        from_id=admin_id,
+        state=FEATURED_USERNAME_STATE,
     )
     await session.commit()
+    _trace(
+        "promo_session_committed",
+        chat_id=chat_id,
+        from_id=admin_id,
+        session_id=str(pending.id),
+        state=pending.state,
+    )
+    _trace("telegram_response_send", chat_id=chat_id, method="sendMessage", outcome="username_prompt")
     await telegram.send_message(
         "Введите username пользователя (без символа @)\n\nНапример:\n\nhakatoshka",
         chat_id=chat_id,
@@ -490,6 +639,7 @@ async def _start_featured_selection(
             ]
         },
     )
+    _trace("telegram_response_returned", chat_id=chat_id, method="sendMessage", outcome="username_prompt")
 
 
 async def _handle_featured_username(
@@ -498,34 +648,92 @@ async def _handle_featured_username(
     username: str,
     telegram: TelegramNotifier,
 ) -> None:
+    _trace(
+        "promo_username_lookup_start",
+        chat_id=pending.chat_id,
+        session_id=str(pending.id),
+        username=username,
+    )
     try:
         campaign = await find_active_campaign_by_username(session, username)
     except FeaturedCampaignUserNotFoundError:
+        _trace("promo_outcome", chat_id=pending.chat_id, outcome="user_not_found", username=username)
+        _trace("telegram_response_send", chat_id=pending.chat_id, method="sendMessage", outcome="user_not_found")
         await telegram.send_message("❌ Пользователь не найден.", chat_id=pending.chat_id)
         return
     except FeaturedCampaignActiveCampaignNotFoundError:
+        _trace("promo_outcome", chat_id=pending.chat_id, outcome="active_campaign_not_found", username=username)
+        _trace(
+            "telegram_response_send",
+            chat_id=pending.chat_id,
+            method="sendMessage",
+            outcome="active_campaign_not_found",
+        )
         await telegram.send_message(
             "❌ У пользователя сейчас нет активной истории.",
             chat_id=pending.chat_id,
         )
         return
     except FeaturedCampaignMultipleActiveCampaignsError:
+        _trace("promo_outcome", chat_id=pending.chat_id, outcome="multiple_active_campaigns", username=username)
+        _trace(
+            "telegram_response_send",
+            chat_id=pending.chat_id,
+            method="sendMessage",
+            outcome="multiple_active_campaigns",
+        )
         await telegram.send_message(
             "❌ У пользователя найдено несколько активных сборов.",
             chat_id=pending.chat_id,
         )
         return
 
-    if await is_featured_campaign(session, campaign.id):
+    _trace(
+        "promo_username_lookup_result",
+        chat_id=pending.chat_id,
+        session_id=str(pending.id),
+        username=username,
+        campaign_id=str(campaign.id),
+        owner_id=str(campaign.owner_id),
+        campaign_status=campaign.status.value,
+        campaign_is_active=campaign.is_active,
+    )
+    already_featured = await is_featured_campaign(session, campaign.id)
+    _trace(
+        "featured_campaign_current_check",
+        chat_id=pending.chat_id,
+        campaign_id=str(campaign.id),
+        already_featured=already_featured,
+    )
+    if already_featured:
         await session.delete(pending)
         await session.commit()
+        _trace("promo_outcome", chat_id=pending.chat_id, outcome="already_featured")
+        _trace("telegram_response_send", chat_id=pending.chat_id, method="sendMessage", outcome="already_featured")
         await telegram.send_message("ℹ️ Этот сбор уже является главным.", chat_id=pending.chat_id)
         return
 
+    _trace(
+        "promo_fsm_transition_start",
+        chat_id=pending.chat_id,
+        session_id=str(pending.id),
+        from_state=pending.state,
+        to_state=FEATURED_CONFIRMATION_STATE,
+        campaign_id=str(campaign.id),
+    )
     pending.campaign_id = campaign.id
     pending.requested_username = campaign.owner.username
     pending.state = FEATURED_CONFIRMATION_STATE
     await session.commit()
+    _trace(
+        "promo_fsm_transition_committed",
+        chat_id=pending.chat_id,
+        session_id=str(pending.id),
+        state=pending.state,
+        requested_username=pending.requested_username,
+        campaign_id=str(pending.campaign_id),
+    )
+    _trace("telegram_response_send", chat_id=pending.chat_id, method="sendMessage", outcome="confirmation_card")
     await telegram.send_message(
         _featured_campaign_card(campaign),
         chat_id=pending.chat_id,
@@ -536,6 +744,7 @@ async def _handle_featured_username(
             ]
         },
     )
+    _trace("telegram_response_returned", chat_id=pending.chat_id, method="sendMessage", outcome="confirmation_card")
 
 
 async def _ask_archive_confirmation(
