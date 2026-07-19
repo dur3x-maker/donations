@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -16,8 +17,11 @@ from app.services.activity_service import create_activity
 from app.services.campaign_service import recalculate_campaign_aggregates
 from app.services.featured_campaign_service import (
     FeaturedCampaignActiveCampaignNotFoundError,
+    FeaturedCampaignAlreadySelectedError,
+    FeaturedCampaignMultipleActiveCampaignsError,
     FeaturedCampaignUserNotFoundError,
     find_active_campaign_by_username,
+    is_featured_campaign,
     set_featured_campaign_by_username,
 )
 from app.services.notification_service import create_notification
@@ -28,6 +32,8 @@ PROMO_ACTION_PREFIX = "promo"
 REVISION_REASON_STATE = "revision_reason"
 FEATURED_USERNAME_STATE = "featured_username"
 FEATURED_CONFIRMATION_STATE = "featured_confirmation"
+FEATURED_STATES = (FEATURED_USERNAME_STATE, FEATURED_CONFIRMATION_STATE)
+logger = logging.getLogger("telegram_moderation")
 
 
 async def handle_telegram_update(
@@ -65,16 +71,32 @@ async def _handle_callback_query(
         return
 
     if data.startswith(f"{PROMO_ACTION_PREFIX}:"):
-        await _handle_featured_callback(
-            session,
-            data,
-            callback_id,
-            chat_id,
-            message_id,
-            admin_id,
-            admin_name,
-            telegram,
-        )
+        try:
+            await _handle_featured_callback(
+                session,
+                data,
+                callback_id,
+                chat_id,
+                message_id,
+                admin_id,
+                admin_name,
+                telegram,
+            )
+        except Exception:
+            await session.rollback()
+            logger.exception(
+                "telegram_featured_callback_failed action=%s chat_id=%s admin_id=%s",
+                data,
+                chat_id,
+                admin_id,
+            )
+            await telegram.send_message(
+                "❌ Внутренняя ошибка. Попробуйте ещё раз или проверьте логи.",
+                chat_id=chat_id,
+            )
+            if callback_id:
+                await telegram.answer_callback_query(callback_id, "Внутренняя ошибка.")
+            raise
         return
 
     parsed = _parse_callback_data(data)
@@ -135,9 +157,10 @@ async def _handle_message(session: AsyncSession, message: dict, telegram: Telegr
     admin = message.get("from") or {}
     admin_id = str(admin.get("id") or "")
     chat_id = str((message.get("chat") or {}).get("id", ""))
-    if not text or not admin_id:
+    if not text:
         return
     if not _is_admin_chat(chat_id):
+        logger.warning("telegram_admin_message_rejected chat_id=%s admin_id=%s", chat_id, admin_id)
         return
 
     if text in {"/start", "/admin"}:
@@ -148,14 +171,36 @@ async def _handle_message(session: AsyncSession, message: dict, telegram: Telegr
         )
         return
 
-    pending = await session.scalar(
-        select(TelegramModerationSession).where(TelegramModerationSession.admin_telegram_id == admin_id)
-    )
+    pending = await _pending_session_for_message(session, admin_id, chat_id)
     if pending is None:
+        logger.warning(
+            "telegram_admin_message_without_session chat_id=%s admin_id=%s sender_chat_id=%s",
+            chat_id,
+            admin_id,
+            str((message.get("sender_chat") or {}).get("id") or ""),
+        )
+        await telegram.send_message(
+            "⚠️ Активный сценарий не найден. Нажмите «⭐ Главное промо» и попробуйте снова.",
+            chat_id=chat_id,
+        )
         return
 
     if pending.state == FEATURED_USERNAME_STATE:
-        await _handle_featured_username(session, pending, text, telegram)
+        try:
+            await _handle_featured_username(session, pending, text, telegram)
+        except Exception:
+            await session.rollback()
+            logger.exception(
+                "telegram_featured_username_failed chat_id=%s admin_id=%s username=%s",
+                chat_id,
+                admin_id,
+                text,
+            )
+            await telegram.send_message(
+                "❌ Внутренняя ошибка. Попробуйте ещё раз или проверьте логи.",
+                chat_id=chat_id,
+            )
+            raise
         return
 
     if pending.state == FEATURED_CONFIRMATION_STATE:
@@ -180,6 +225,42 @@ async def _handle_message(session: AsyncSession, message: dict, telegram: Telegr
         telegram,
         comment=text,
     )
+
+
+async def _pending_session_for_message(
+    session: AsyncSession,
+    admin_id: str,
+    chat_id: str,
+) -> TelegramModerationSession | None:
+    if admin_id:
+        pending = await session.scalar(
+            select(TelegramModerationSession).where(
+                TelegramModerationSession.admin_telegram_id == admin_id
+            ).with_for_update()
+        )
+        if pending is not None:
+            return pending
+
+    featured_sessions = list(
+        await session.scalars(
+            select(TelegramModerationSession).where(
+                TelegramModerationSession.chat_id == chat_id,
+                TelegramModerationSession.state.in_(FEATURED_STATES),
+            ).with_for_update()
+        )
+    )
+    if len(featured_sessions) == 1:
+        pending = featured_sessions[0]
+        logger.warning(
+            "telegram_featured_session_recovered chat_id=%s expected_admin_id=%s actual_admin_id=%s",
+            chat_id,
+            pending.admin_telegram_id,
+            admin_id,
+        )
+        return pending
+    if len(featured_sessions) > 1:
+        logger.error("telegram_featured_session_ambiguous chat_id=%s count=%s", chat_id, len(featured_sessions))
+    return None
 
 
 async def _start_revision(
@@ -302,7 +383,7 @@ async def _handle_featured_callback(
         select(TelegramModerationSession).where(
             TelegramModerationSession.admin_telegram_id == admin_id,
             TelegramModerationSession.state == FEATURED_CONFIRMATION_STATE,
-        )
+        ).with_for_update()
     )
     if pending is None or not pending.requested_username:
         if callback_id:
@@ -335,17 +416,41 @@ async def _handle_featured_callback(
         if callback_id:
             await telegram.answer_callback_query(callback_id, "Нет активной истории.")
         return
+    except FeaturedCampaignMultipleActiveCampaignsError:
+        await session.delete(pending)
+        await session.commit()
+        await telegram.edit_message_text(
+            chat_id,
+            message_id,
+            "❌ У пользователя найдено несколько активных сборов.",
+            reply_markup={"inline_keyboard": []},
+        )
+        if callback_id:
+            await telegram.answer_callback_query(callback_id, "Найдено несколько сборов.")
+        return
+    except FeaturedCampaignAlreadySelectedError:
+        await session.delete(pending)
+        await session.commit()
+        await telegram.edit_message_text(
+            chat_id,
+            message_id,
+            "ℹ️ Этот сбор уже является главным.",
+            reply_markup={"inline_keyboard": []},
+        )
+        if callback_id:
+            await telegram.answer_callback_query(callback_id, "Сбор уже является главным.")
+        return
 
     await session.delete(pending)
     await session.commit()
     await telegram.edit_message_text(
         chat_id,
         message_id,
-        "✅ Главная история обновлена.",
+        "✅ Сбор успешно назначен главным.",
         reply_markup={"inline_keyboard": []},
     )
     if callback_id:
-        await telegram.answer_callback_query(callback_id, "Главная история обновлена.")
+        await telegram.answer_callback_query(callback_id, "Сбор успешно назначен главным.")
 
 
 async def _start_featured_selection(
@@ -357,7 +462,13 @@ async def _start_featured_selection(
     telegram: TelegramNotifier,
 ) -> None:
     await session.execute(
-        delete(TelegramModerationSession).where(TelegramModerationSession.admin_telegram_id == admin_id)
+        delete(TelegramModerationSession).where(
+            (TelegramModerationSession.admin_telegram_id == admin_id)
+            | (
+                (TelegramModerationSession.chat_id == chat_id)
+                & TelegramModerationSession.state.in_(FEATURED_STATES)
+            )
+        )
     )
     session.add(
         TelegramModerationSession(
@@ -397,6 +508,18 @@ async def _handle_featured_username(
             "❌ У пользователя сейчас нет активной истории.",
             chat_id=pending.chat_id,
         )
+        return
+    except FeaturedCampaignMultipleActiveCampaignsError:
+        await telegram.send_message(
+            "❌ У пользователя найдено несколько активных сборов.",
+            chat_id=pending.chat_id,
+        )
+        return
+
+    if await is_featured_campaign(session, campaign.id):
+        await session.delete(pending)
+        await session.commit()
+        await telegram.send_message("ℹ️ Этот сбор уже является главным.", chat_id=pending.chat_id)
         return
 
     pending.campaign_id = campaign.id

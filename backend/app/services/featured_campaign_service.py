@@ -20,31 +20,52 @@ class FeaturedCampaignActiveCampaignNotFoundError(Exception):
         super().__init__("У пользователя сейчас нет активной истории.")
 
 
+class FeaturedCampaignMultipleActiveCampaignsError(Exception):
+    def __init__(self) -> None:
+        super().__init__("У пользователя найдено несколько активных сборов.")
+
+
+class FeaturedCampaignAlreadySelectedError(Exception):
+    def __init__(self) -> None:
+        super().__init__("Сбор уже является главным.")
+
+
 async def find_active_campaign_by_username(session: AsyncSession, username: str) -> Campaign:
     normalized_username = username.strip().removeprefix("@").lower()
     user = await session.scalar(select(User).where(User.username == normalized_username))
     if user is None:
         raise FeaturedCampaignUserNotFoundError
 
-    campaign = await session.scalar(
-        select(Campaign)
-        .options(selectinload(Campaign.owner))
-        .where(
-            Campaign.owner_id == user.id,
-            Campaign.status == CampaignStatus.active,
-            Campaign.is_active.is_(True),
+    campaigns = list(
+        await session.scalars(
+            select(Campaign)
+            .options(selectinload(Campaign.owner))
+            .where(
+                Campaign.owner_id == user.id,
+                Campaign.status == CampaignStatus.active,
+                Campaign.is_active.is_(True),
+            )
+            .with_for_update()
         )
-        .with_for_update()
     )
-    if campaign is None:
+    if not campaigns:
         raise FeaturedCampaignActiveCampaignNotFoundError
-    return campaign
+    if len(campaigns) > 1:
+        raise FeaturedCampaignMultipleActiveCampaignsError
+    return campaigns[0]
 
 
 async def set_featured_campaign_by_username(session: AsyncSession, username: str) -> Campaign:
     campaign = await find_active_campaign_by_username(session, username)
+    if await is_featured_campaign(session, campaign.id):
+        raise FeaturedCampaignAlreadySelectedError
     await _store_featured_campaign_id(session, campaign.id)
     return campaign
+
+
+async def is_featured_campaign(session: AsyncSession, campaign_id: UUID) -> bool:
+    platform_settings = await session.get(PlatformSetting, 1)
+    return bool(platform_settings and platform_settings.featured_campaign_id == campaign_id)
 
 
 async def get_featured_campaign(session: AsyncSession) -> Campaign | None:

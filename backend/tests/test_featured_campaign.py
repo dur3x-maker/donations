@@ -14,7 +14,7 @@ async def test_set_featured_campaign_by_username(db_session, user_factory, campa
     owner = await user_factory(username="nikita")
     campaign = await campaign_factory(owner, title="Безопасная ванная для Ирины")
 
-    selected = await set_featured_campaign_by_username(db_session, "NIKITA")
+    selected = await set_featured_campaign_by_username(db_session, "  @NIKITA  ")
 
     platform_settings = await db_session.get(PlatformSetting, 1)
     assert selected.id == campaign.id
