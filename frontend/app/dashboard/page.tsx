@@ -181,7 +181,11 @@ function CampaignCard({ campaign, canCreateAnotherCampaign, canOpenBankAccount }
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">мой сбор</p>
           <h2 className="mt-3 text-2xl font-semibold text-stone-950">{campaign.title}</h2>
         </div>
-        <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${campaign.is_verified ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>{campaign.is_verified ? "проверен" : "на проверке"}</span>
+        {campaign.status === "PENDING_REVIEW" ? (
+          <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">
+            на проверке
+          </span>
+        ) : null}
       </div>
       <div className="mt-7 flex flex-wrap items-end justify-between gap-3">
         <div>

@@ -33,7 +33,7 @@ async def test_create_and_view_campaign(
     assert await count_rows(db_session, Campaign, Campaign.owner_id == author.id) == 1
 
 
-async def test_high_value_campaign_goes_to_pending_review_and_publishes_admin_event(
+async def test_campaign_at_moderation_threshold_goes_to_pending_review_and_publishes_admin_event(
     client, db_session, user_factory, campaign_factory, contribution_factory, auth_headers
 ):
     from app.main import app
@@ -47,21 +47,22 @@ async def test_high_value_campaign_goes_to_pending_review_and_publishes_admin_ev
 
     response = await client.post(
         "/api/v1/campaigns",
-        json=campaign_payload(target_amount="1250000"),
+        json=campaign_payload(target_amount="1000000"),
         headers=auth_headers(author),
     )
 
     assert response.status_code == 201
     assert response.json()["status"] == CampaignStatus.pending_review.value
+    assert response.json()["is_active"] is True
     campaign = await db_session.get(Campaign, response.json()["id"])
     assert campaign.status == CampaignStatus.pending_review
     assert len(fake_service.events) == 1
     assert fake_service.events[0].type == AdminEventType.high_value_campaign
-    assert ("Сумма", "1 250 000 ₽") in fake_service.events[0].sections
+    assert ("Сумма", "1 000 000 ₽") in fake_service.events[0].sections
 
 
 async def test_regular_campaign_creation_stays_active_without_admin_event(
-    client, user_factory, campaign_factory, contribution_factory, auth_headers
+    client, db_session, user_factory, campaign_factory, contribution_factory, auth_headers
 ):
     from app.main import app
 
@@ -74,12 +75,15 @@ async def test_regular_campaign_creation_stays_active_without_admin_event(
 
     response = await client.post(
         "/api/v1/campaigns",
-        json=campaign_payload(target_amount="999999"),
+        json=campaign_payload(target_amount="999999.99"),
         headers=auth_headers(author),
     )
 
     assert response.status_code == 201
     assert response.json()["status"] == CampaignStatus.active.value
+    assert response.json()["is_active"] is True
+    campaign = await db_session.get(Campaign, response.json()["id"])
+    assert campaign.status == CampaignStatus.active
     assert fake_service.events == []
 
 
