@@ -1,5 +1,6 @@
 import asyncio
 import json
+from pathlib import Path
 from uuid import uuid4
 
 import httpx
@@ -10,6 +11,17 @@ from gateway.sophie_client import (
     SophieDevOpsClient,
     SophieDevOpsTimeoutError,
 )
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_gateway_defaults_to_dedicated_headless_port() -> None:
+    compose = (ROOT / "docker-compose.devops.yml").read_text(encoding="utf-8")
+    example = (ROOT / ".env.devops.example").read_text(encoding="utf-8")
+
+    assert "http://127.0.0.1:8011" in compose
+    assert "SOPHIE_DEVOPS_API_URL=http://127.0.0.1:8011" in example
+    assert "http://127.0.0.1:8001" not in compose
 
 
 def test_client_uses_versioned_authenticated_contract() -> None:

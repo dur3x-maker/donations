@@ -24,7 +24,7 @@ No Sophie modules are imported or copied into Donations.
 - `DEVOPS_TELEGRAM_CHAT_IDS` restricts the entrypoint to explicit groups;
 - `SOPHIE_DEVOPS_API_TOKEN_FILE` and Sophie's `DEVOPS_API_TOKEN_FILE` point to the
   same long, random secret of at least 32 characters;
-- the headless API binds only to `127.0.0.1:8001`;
+- the headless API binds only to `127.0.0.1:8011`;
 - the headless image has no Docker socket and uses Sophie's restricted SSH identity.
 
 The Gateway ignores all ordinary group messages while asleep. It wakes only on `Софи, ...`
@@ -45,7 +45,7 @@ DEVOPS_TELEGRAM_BOT_TOKEN=...
 DEVOPS_TELEGRAM_ALLOWED_USER_IDS=123456789
 DEVOPS_TELEGRAM_CHAT_IDS=-1001234567890
 DEVOPS_SESSION_TIMEOUT_SECONDS=60
-SOPHIE_DEVOPS_API_URL=http://127.0.0.1:8001
+SOPHIE_DEVOPS_API_URL=http://127.0.0.1:8011
 SOPHIE_DEVOPS_API_TOKEN_FILE=/srv/secrets/sophie-devops-api-token
 SOPHIE_DEVOPS_API_TIMEOUT_SECONDS=1250
 ```
