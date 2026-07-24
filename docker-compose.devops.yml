@@ -1,0 +1,34 @@
+name: donations-devops
+
+services:
+  gateway:
+    build:
+      context: ./devops_gateway
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      DEVOPS_TELEGRAM_BOT_TOKEN: ${DEVOPS_TELEGRAM_BOT_TOKEN:?required}
+      DEVOPS_TELEGRAM_ALLOWED_USER_IDS: ${DEVOPS_TELEGRAM_ALLOWED_USER_IDS:?required}
+      DEVOPS_TELEGRAM_CHAT_IDS: ${DEVOPS_TELEGRAM_CHAT_IDS:?required}
+      DEVOPS_SESSION_TIMEOUT_SECONDS: ${DEVOPS_SESSION_TIMEOUT_SECONDS:-60}
+      SOPHIE_DEVOPS_API_URL: ${SOPHIE_DEVOPS_API_URL:-http://127.0.0.1:8001}
+      SOPHIE_DEVOPS_API_TOKEN_FILE: /run/secrets/sophie_devops_api_token
+      SOPHIE_DEVOPS_API_TIMEOUT_SECONDS: ${SOPHIE_DEVOPS_API_TIMEOUT_SECONDS:-1250}
+    secrets:
+      - source: sophie_devops_api_token
+        target: sophie_devops_api_token
+        mode: 0400
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 256m
+    cpus: 0.5
+
+secrets:
+  sophie_devops_api_token:
+    file: ${SOPHIE_DEVOPS_API_TOKEN_FILE:?required}
