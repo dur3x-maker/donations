@@ -53,8 +53,18 @@ SOPHIE_DEVOPS_API_TIMEOUT_SECONDS=1250
 Start the dedicated headless Compose from Sophie first. Then start this isolated Gateway
 Compose project:
 
+Compose V2:
+
 ```bash
-docker compose --env-file .env.devops -f docker-compose.devops.yml up -d --build
+docker compose --env-file .env.devops -p donations-devops \
+  -f docker-compose.devops.yml up -d --build
+```
+
+Compose V1 1.29.2:
+
+```bash
+docker-compose --env-file .env.devops -p donations-devops \
+  -f docker-compose.devops.yml up -d --build
 ```
 
 This separate Compose lifecycle prevents a Donations deploy from restarting the Gateway that
